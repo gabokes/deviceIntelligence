@@ -21,7 +21,7 @@ async function analyzeInsightsWithToqan(deviceData, intelligenceData) {
     }
 
     const createData = await createRes.json()
-    const { request_id } = createData
+    const { conversation_id, request_id } = createData
 
     if (!request_id) {
       console.error('[ToqanInsights] respuesta inesperada:', createData)
@@ -31,8 +31,9 @@ async function analyzeInsightsWithToqan(deviceData, intelligenceData) {
 
     // 2. Polling
     const pollUrl = cfg.getAnswerUrl
-      + '?request_id=' + encodeURIComponent(request_id)
-      + '&apiKey='     + encodeURIComponent(cfg.apiKey)
+      + '?conversation_id=' + encodeURIComponent(conversation_id)
+      + '&request_id='      + encodeURIComponent(request_id)
+      + '&apiKey='          + encodeURIComponent(cfg.apiKey)
 
     const deadline = Date.now() + cfg.pollTimeoutMs
 
