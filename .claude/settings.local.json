@@ -16,7 +16,8 @@
       "Bash(taskkill /PID 67756 /F)",
       "Bash(cmd /c \"taskkill /PID 67756 /F\")",
       "Bash(cmd /c \"taskkill /F /PID 67756 2>&1\")",
-      "Bash(node test-agents.js)"
+      "Bash(node test-agents.js)",
+      "Bash(npx vercel:*)"
     ]
   }
 }

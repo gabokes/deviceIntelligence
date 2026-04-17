@@ -2,6 +2,6 @@
   "name": "koin-browser-intelligence",
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js"
+    "start": "npx serve . -l 3000"
   }
 }
