@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -19,5 +19,5 @@ export default async function handler(req, res) {
   })
 
   const data = await response.json()
-  res.status(response.status).json(data)
+  return res.status(200).json(data)
 }
