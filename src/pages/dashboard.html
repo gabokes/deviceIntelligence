@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koin · Browser Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F4F7;--surface:#fff;--s2:#F8F9FB;--s3:#F2F4F7;
+  --border:#E4E7EC;--border-s:#D0D5DD;
+  --t1:#101828;--t2:#475467;--t3:#98A2B3;--t4:#D0D5DD;
+  --g50:#F6FEF9;--g100:#DCFAE6;--g600:#079455;--g700:#067647;
+  --a50:#FFFAEB;--a100:#FEF0C7;--a600:#DC6803;--amber:#B54708;
+  --r50:#FEF3F2;--r100:#FEE4E2;--r600:#D92D20;
+  --b50:#EFF8FF;--b100:#D1E9FF;--b600:#1570EF;
+  --p50:#F4F3FF;--p100:#EBE9FE;--p200:#C9C5F7;--p600:#6938EF;--p700:#5925DC;--p800:#3C3489;--p900:#26215C;
+  --brand:#17B26A;
+  --mono:'DM Mono',monospace;--sans:'Geist',sans-serif;
+}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100vh;display:flex;flex-direction:column}
+svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* TOPBAR */
+.topbar{height:52px;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px}
+.tb-logo{width:26px;height:26px;background:var(--t1);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.tb-logo svg{width:13px;height:13px;stroke:#fff}
+.tb-name{font-size:.85rem;font-weight:700;letter-spacing:-.02em}
+.tb-div{width:1px;height:16px;background:var(--border)}
+.tb-crumb{font-family:var(--mono);font-size:.64rem;color:var(--t3)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-risk{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.62rem;font-weight:600;background:var(--r50);border:1px solid var(--r100);color:var(--r600)}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:var(--r600);animation:blink 1.4s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-time{font-family:var(--mono);font-size:.62rem;color:var(--t3)}
+.tb-back{font-size:.72rem;color:var(--t2);text-decoration:none;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);transition:background .12s}
+.tb-back:hover{background:var(--s2)}
+
+/* SESSION STRIP */
+.sess{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px}
+.sess-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sess-left{}
+.sess-meta{font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-bottom:3px}
+.sess-headline{font-size:.95rem;font-weight:600;letter-spacing:-.02em}
+.sess-right{display:flex;align-items:center;gap:10px}
+.verdict-chip{display:flex;align-items:center;gap:12px;background:var(--r50);border:1px solid var(--r100);border-radius:10px;padding:10px 16px}
+.vc-label{font-size:.7rem;font-weight:600;color:var(--r600)}
+.vc-sub{font-size:.62rem;color:var(--t3);margin-top:1px}
+.vc-score{font-size:2rem;font-weight:700;letter-spacing:-.05em;color:var(--r600);line-height:1}
+
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px}
+.tabs-inner{max-width:1280px;margin:0 auto;display:flex}
+.tab{display:flex;align-items:center;gap:6px;padding:10px 14px;font-size:.78rem;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:color .12s,border-color .12s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--t1)}
+.tab.active{color:var(--t1);font-weight:600;border-bottom-color:var(--brand)}
+.tab svg{width:13px;height:13px;flex-shrink:0}
+.tab-badge{font-size:.52rem;font-weight:700;padding:1px 5px;border-radius:5px;background:var(--r100);color:var(--r600);margin-left:2px}
+
+/* BODY */
+.body{flex:1;padding:20px 24px 60px}
+.body-inner{max-width:1280px;margin:0 auto}
+.pane{display:none}.pane.active{display:block}
+
+/* UTILS */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:.57rem;font-weight:600;border:1px solid;white-space:nowrap;font-family:var(--mono)}
+.p-green{background:var(--g50);color:var(--g700);border-color:var(--g100)}
+.p-amber{background:var(--a50);color:var(--amber);border-color:var(--a100)}
+.p-red{background:var(--r50);color:var(--r600);border-color:var(--r100)}
+.p-purple{background:var(--p50);color:var(--p700);border-color:var(--p100)}
+.p-blue{background:var(--b50);color:var(--b600);border-color:var(--b100)}
+.p-gray{background:var(--s3);color:var(--t2);border-color:var(--border)}
+.p-new{background:#EFF8FF;color:#175CD3;border-color:#B5D4F4}
+.p-roadmap{background:var(--p50);color:var(--p700);border-color:var(--p100)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.lbl{font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--t3)}
+.sec{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:2px}
+
+/* ══════════════════════════════════════
+   TAB 1 · INSIGHTS
+══════════════════════════════════════ */
+
+/* parallel header */
+.parallel-hd{margin-bottom:16px}
+.parallel-hd p{font-size:.72rem;color:var(--t3);font-weight:500;margin-bottom:4px}
+.parallel-hd h2{font-size:1rem;font-weight:600;letter-spacing:-.02em}
+
+/* Agent card */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px}
+.ag{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:box-shadow .12s}
+.ag:hover{box-shadow:0 2px 8px rgba(16,24,40,.07)}
+.ag::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ag.ok::before{background:var(--brand)}
+.ag.warn::before{background:var(--a600)}
+.ag.risk::before{background:var(--r600)}
+.ag-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ag-meta{font-family:var(--mono);font-size:.57rem;color:var(--t3);margin-bottom:2px}
+.ag-name{font-size:.84rem;font-weight:600;letter-spacing:-.01em}
+.ag-badge{font-size:.58rem;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;flex-shrink:0;font-family:var(--mono)}
+.ag-badge.ok{background:var(--g100);color:var(--g700)}
+.ag-badge.warn{background:var(--a100);color:var(--amber)}
+.ag-badge.risk{background:var(--r100);color:var(--r600)}
+.ag-badge.clear{background:var(--g50);color:var(--g600);border:1px solid var(--g100)}
+.ag-insight{font-size:.73rem;color:var(--t1);line-height:1.65;border-left:2px solid var(--p200);padding-left:10px;margin-bottom:10px;font-style:italic}
+.ag-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ag-tag{font-size:.57rem;background:var(--s3);color:var(--t2);border:1px solid var(--border);padding:2px 7px;border-radius:5px;font-family:var(--mono)}
+.ag-similar{font-size:.62rem;color:var(--t3);font-family:var(--mono);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.ag-similar span{color:var(--p700);font-weight:500}
+
+/* Orchestrator */
+.orchestrator{background:#EEEDFE;border:0.5px solid var(--p200);border-radius:12px;padding:20px 22px;margin-top:4px}
+.orc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.orc-eyebrow{font-size:.62rem;color:var(--p700);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.orc-title{font-size:1rem;font-weight:600;color:var(--p900);letter-spacing:-.02em}
+.orc-score-wrap{text-align:right;flex-shrink:0}
+.orc-score{font-size:3rem;font-weight:700;letter-spacing:-.05em;color:var(--p900);line-height:1}
+.orc-score-sub{font-size:.6rem;color:var(--p700);margin-top:2px}
+.orc-insight{font-size:.76rem;color:var(--p800);line-height:1.65;border-left:2px solid #7F77DD;padding-left:12px;margin-bottom:14px;font-style:italic}
+.orc-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.orc-tag{font-size:.64rem;background:#CECBF6;color:var(--p900);padding:3px 9px;border-radius:6px;font-weight:500}
+.orc-ecosystem{margin-top:14px;padding-top:14px;border-top:0.5px solid var(--p200);font-size:.7rem;color:var(--p800);line-height:1.6}
+.orc-ecosystem strong{color:var(--p900)}
+
+/* Vote strip */
+.vote-strip{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.vote-item{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:.62rem;font-weight:500;border:1px solid}
+.vote-item.risk{background:var(--r50);border-color:var(--r100);color:var(--r600)}
+.vote-item.warn{background:var(--a50);border-color:var(--a100);color:var(--amber)}
+.vote-item.ok{background:var(--g50);border-color:var(--g100);color:var(--g700)}
+.vote-dot{width:5px;height:5px;border-radius:50%}
+.vote-item.risk .vote-dot{background:var(--r600)}
+.vote-item.warn .vote-dot{background:var(--a600)}
+.vote-item.ok .vote-dot{background:var(--brand)}
+
+/* ══════════════════════════════════════
+   TAB 2 · VECTORS
+══════════════════════════════════════ */
+.vectors-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.vectors-layout{grid-template-columns:1fr}}
+
+/* Score ring */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ring-svg{position:relative;width:110px;height:110px}
+.ring-svg svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;letter-spacing:-.04em}
+.ring-lbl{font-size:.62rem;color:var(--t3);text-align:center}
+
+/* Comp bars */
+.comp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.comp-lbl{font-size:.66rem;color:var(--t2);flex:0 0 150px}
+.comp-bar-bg{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.comp-bar{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);width:0}
+.comp-val{font-family:var(--mono);font-size:.62rem;width:28px;text-align:right}
+
+/* Vector table */
+.vtable{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.vt-head{display:grid;grid-template-columns:24px 1fr 180px 120px 80px 90px;gap:10px;padding:8px 14px;background:var(--s2);border-bottom:1px solid var(--border)}
+.vt-hcell{font-size:.57rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3)}
+.vt-row{display:grid;grid-template-columns:24px 1fr 180px 120px 80px 90px;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+.vt-row:last-child{border-bottom:none}
+.vt-row:hover{background:var(--s2)}
+.vt-row.roadmap{opacity:.45}
+.vt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.vt-name{font-size:.76rem;font-weight:600}
+.vt-name small{display:block;font-size:.58rem;font-weight:400;color:var(--t3);font-family:var(--mono);margin-top:1px}
+.vt-signals{display:flex;flex-wrap:wrap;gap:3px}
+.vt-sig{font-size:.54rem;background:var(--s3);color:var(--t2);border:1px solid var(--border);padding:1px 5px;border-radius:4px;font-family:var(--mono)}
+.vt-bar-bg{height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.vt-bar{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);width:0}
+.vt-score{font-family:var(--mono);font-size:.74rem;font-weight:500;text-align:right}
+.vt-status{text-align:right}
+
+/* ══════════════════════════════════════
+   TAB 3 · INTELLIGENCE
+══════════════════════════════════════ */
+.intel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.intel-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ic-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.ic-badge{font-size:.56rem;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;text-transform:uppercase;letter-spacing:.05em}
+.ic-badge.anomaly{background:var(--r100);color:var(--r600)}
+.ic-badge.warn{background:var(--a100);color:var(--amber)}
+.ic-badge.ok{background:var(--g100);color:var(--g700)}
+.ic-title{font-size:.78rem;font-weight:600;flex:1}
+.ic-vector{font-size:.57rem;font-family:var(--mono);color:var(--t3);background:var(--s3);border:1px solid var(--border);padding:1px 6px;border-radius:4px;flex-shrink:0}
+.ic-body{padding:12px 14px}
+.ic-rule{font-family:var(--mono);font-size:.62rem;color:var(--b600);background:var(--b50);border:1px solid var(--b100);border-radius:5px;padding:6px 10px;margin-bottom:10px;line-height:1.6}
+.ic-signals{display:flex;flex-direction:column;gap:5px}
+.ic-sig-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--s2);border-radius:5px}
+.ic-sig-key{font-family:var(--mono);font-size:.58rem;color:var(--t3)}
+.ic-sig-val{font-family:var(--mono);font-size:.62rem;font-weight:500}
+.ic-sig-val.anomaly{color:var(--r600)}
+.ic-sig-val.warn{color:var(--a600)}
+.ic-sig-val.ok{color:var(--g700)}
+.ic-conclusion{margin-top:10px;font-size:.7rem;color:var(--t2);line-height:1.6;border-left:2px solid var(--border-s);padding-left:8px}
+.intel-filters{display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.if-btn{padding:5px 12px;border-radius:7px;font-size:.7rem;font-weight:500;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--t2);transition:all .12s;font-family:var(--sans)}
+.if-btn:hover{background:var(--s2);color:var(--t1)}
+.if-btn.active{background:var(--t1);color:#fff;border-color:var(--t1)}
+.if-count{margin-left:auto;font-family:var(--mono);font-size:.64rem;color:var(--t3)}
+
+/* ══════════════════════════════════════
+   TAB 4 · SIGNALS RAW
+══════════════════════════════════════ */
+.sig-legend{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sig-legend span{font-size:.68rem;color:var(--t3)}
+
+.sig-section{margin-bottom:24px}
+.sig-sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ssh-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ssh-icon svg{width:13px;height:13px}
+.ssh-title{font-size:.86rem;font-weight:600;flex:1}
+.ssh-count{font-size:.58rem;color:var(--t3);font-family:var(--mono);background:var(--s3);border:1px solid var(--border);padding:2px 7px;border-radius:8px}
+
+.sig-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px;position:relative;overflow:hidden;transition:border-color .12s}
+.sc:hover{border-color:var(--border-s)}
+.sc.risk{border-color:#FECDCA}.sc.risk::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--r600)}
+.sc.warn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--a600)}
+.sc.ok::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--brand)}
+.sc-status{position:absolute;top:8px;right:8px;font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em}
+.sc-status.new{background:var(--b100);color:var(--b600)}
+.sc-status.roadmap{background:var(--p100);color:var(--p700)}
+.sc-key{font-family:var(--mono);font-size:.56rem;color:var(--t3);margin-bottom:5px;padding-right:48px}
+.sc-val{font-size:1.05rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:2px;word-break:break-word}
+.sc-val.md{font-size:.88rem;font-weight:600}
+.sc-val.sm{font-size:.7rem;font-weight:500;font-family:var(--mono);line-height:1.5}
+.sc-desc{font-size:.62rem;color:var(--t3);line-height:1.4;margin-top:3px}
+.sc-desc.risk{color:var(--r600)}
+.sc-desc.warn{color:var(--a600)}
+.sc-div{height:1px;background:var(--border);margin:7px 0}
+.sc-row{display:flex;justify-content:space-between;align-items:center;padding:1px 0}
+.sc-rk{font-family:var(--mono);font-size:.54rem;color:var(--t3)}
+.sc-rv{font-family:var(--mono);font-size:.58rem;color:var(--t2);font-weight:500}
+.sc-rv.risk{color:var(--r600)}.sc-rv.warn{color:var(--a600)}.sc-rv.ok{color:var(--g700)}
+.sc.roadmap{opacity:.45;filter:grayscale(.3)}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-logo">
+    <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><path d="M9 11.5h6M12 9v5"/></svg>
+  </div>
+  <span class="tb-name">Koin</span>
+  <div class="tb-div"></div>
+  <span class="tb-crumb" id="tb-crumb">Browser Intelligence · session e62833c2cf</span>
+  <div class="tb-right">
+    <a href="landing.html" class="tb-back">
+      <svg width="12" height="12" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg>
+      Volver
+    </a>
+    <span class="tb-time" id="tb-time">15 abr 2025 · 14:23 UTC</span>
+    <div class="tb-risk"><div class="tb-dot"></div><span id="tb-risk-label">Riesgo alto</span></div>
+  </div>
+</div>
+
+<!-- SESSION STRIP -->
+<div class="sess">
+  <div class="sess-inner">
+    <div class="sess-left">
+      <div class="sess-meta" id="sess-meta">Windows 10 · Chrome 124 · timezone -3 (ARG) · lang es-ES · device 2d3fda04d8</div>
+      <div class="sess-headline" id="sess-headline">10 agentes analizaron este device en paralelo · 187ms</div>
+    </div>
+    <div class="sess-right">
+      <div class="verdict-chip">
+        <div>
+          <div class="vc-label" id="vc-label">Riesgo alto · revisar</div>
+          <div class="vc-sub">Orquestador · consenso 10 agentes</div>
+        </div>
+        <div class="vc-score" id="vc-score">78</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tabs-inner">
+    <div class="tab active" onclick="go('insights',this)">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      Insights
+      <span class="tab-badge">3</span>
+    </div>
+    <div class="tab" onclick="go('vectors',this)">
+      <svg viewBox="0 0 16 16"><path d="M2 13L5 7l3 3 3-4 3 4"/></svg>
+      Vectores
+    </div>
+    <div class="tab" onclick="go('intel',this)">
+      <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 2 10 2-5h3"/></svg>
+      Intelligence
+    </div>
+    <div class="tab" onclick="go('raw',this)">
+      <svg viewBox="0 0 16 16"><path d="M5 3H3a1 1 0 0 0-1 1v2M5 13H3a1 1 0 0 1-1-1v-2M11 3h2a1 1 0 0 1 1 1v2M11 13h2a1 1 0 0 0 1-1v-2"/></svg>
+      Señales raw
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+<div class="body-inner">
+
+<!-- ═══════════════════════════════ INSIGHTS ═══════════════════════════════ -->
+<div class="pane active" id="pane-insights">
+
+  <div class="parallel-hd">
+    <p>Razonamiento multi-agente · en paralelo</p>
+    <h2>10 agentes especializados analizaron este device. Cada uno es experto en su vector.</h2>
+  </div>
+
+  <!-- HERO DECISION -->
+  <div style="background:var(--r50);border:1px solid var(--r100);border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      <div style="font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--r600);margin-bottom:4px">Decisión recomendada · Agente Orquestador</div>
+      <div style="font-size:1.05rem;font-weight:600;color:var(--r600);letter-spacing:-.02em;margin-bottom:8px" id="hero-verdict-label">Revisar antes de aprobar</div>
+      <div id="hero-desc" style="font-size:.78rem;color:var(--t2);line-height:1.65;margin-bottom:12px">Este device opera desde un entorno virtualizado detrás de una VPN. Tres agentes coinciden en señales críticas. El patrón es parte de una campaña activa en el ecosistema.</div>
+      <div id="hero-pills" style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="pill p-red">3 alertas críticas</span>
+        <span class="pill p-amber">1 aviso</span>
+        <span class="pill p-green">3 limpios</span>
+        <span class="pill p-gray">3 sin datos</span>
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-size:3.2rem;font-weight:700;letter-spacing:-.05em;color:var(--r600);line-height:1" id="hero-score">78</div>
+      <div style="font-size:.62rem;color:var(--t3);margin-top:2px">score de riesgo</div>
+    </div>
+  </div>
+
+  <div class="agent-grid" id="insights-agent-grid">
+
+    <!-- Bot Detection -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · automatización</div>
+          <div class="ag-name">Bot Detection</div>
+        </div>
+        <div class="ag-badge clear">Limpio · 12</div>
+      </div>
+      <div class="ag-insight">navigator.webdriver está en false y no detecto flags de automatización. El perfil de JS execution es consistente con un browser real operado por humano.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">webdriver=false</span>
+        <span class="ag-tag">sin puppeteer</span>
+        <span class="ag-tag">sin selenium</span>
+      </div>
+    </div>
+
+    <!-- Browser Spoofing -->
+    <div class="ag risk">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · integridad del browser</div>
+          <div class="ag-name">Browser Spoofing</div>
+        </div>
+        <div class="ag-badge risk">Alerta · 61</div>
+      </div>
+      <div class="ag-insight">El GPU vendor reportado es "Google Inc. (ANGLE)". Ese renderer aparece en el 94% de los headless browsers y emuladores que procesamos. El UA dice Windows/Chrome pero el contexto WebGL no coincide.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">ANGLE renderer</span>
+        <span class="ag-tag">WebGL inconsistente</span>
+        <span class="ag-tag">UA mismatch</span>
+      </div>
+      <div class="ag-similar">Patrón similar a <span>clúster VM-Chrome detectado en 312 devices esta semana</span></div>
+    </div>
+
+    <!-- Emulator / VM -->
+    <div class="ag risk">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · hardware</div>
+          <div class="ag-name">Emulator / VM</div>
+        </div>
+        <div class="ag-badge risk">Alerta · 82</div>
+      </div>
+      <div class="ag-insight">14 cores con cpuSpeed de 36ms promedio es físicamente inconsistente. Hardware real con ese core count produce benchmarks 3-4× más rápidos. Sumado al ANGLE GPU, el perfil es de VM con recursos asignados artificialmente.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">cores/speed anómalo</span>
+        <span class="ag-tag">GPU virtualizada</span>
+        <span class="ag-tag">pixelRatio=1</span>
+      </div>
+      <div class="ag-similar">Patrón similar a <span>847 devices bloqueados en el ecosistema en 24h</span></div>
+    </div>
+
+    <!-- Tor -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · anonimización</div>
+          <div class="ag-name">Tor</div>
+        </div>
+        <div class="ag-badge clear">Limpio · 5</div>
+      </div>
+      <div class="ag-insight">Sin señales de exit nodes ni RTT anómalo desde el browser. La detección completa requiere WebRTC y enriquecimiento server-side de IP, que están en roadmap.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">sin exit node signals</span>
+        <span class="ag-tag">RTT normal</span>
+        <span class="ag-tag">WebRTC pendiente</span>
+      </div>
+    </div>
+
+    <!-- Proxy / VPN -->
+    <div class="ag risk">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · geolocalización</div>
+          <div class="ag-name">Proxy / VPN</div>
+        </div>
+        <div class="ag-badge risk">Alerta · 74</div>
+      </div>
+      <div class="ag-insight">Timezone -3 corresponde a Argentina. El idioma configurado es es-ES (España). Esa combinación aparece en el 89% de las sesiones donde confirmamos VPN activa. En nuestra red, este par tiene tasa de fraude 4.2× el baseline.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">TZ=ARG · lang=ESP</span>
+        <span class="ag-tag">fraude 4.2× baseline</span>
+        <span class="ag-tag">patrón conocido</span>
+      </div>
+      <div class="ag-similar">Patrón similar a <span>clúster VPN-LATAM activo en 12 merchants esta semana</span></div>
+    </div>
+
+    <!-- Incognito -->
+    <div class="ag warn">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · privacidad</div>
+          <div class="ag-name">Incognito</div>
+        </div>
+        <div class="ag-badge warn">Aviso · 34</div>
+      </div>
+      <div class="ag-insight">privateBrowsing=false directo, pero el storage quota API —que es el método más confiable— no está implementado aún. Con el contexto de VM probable, no descarto modo incógnito no detectado.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">flag=false</span>
+        <span class="ag-tag">quota API pendiente</span>
+        <span class="ag-tag">inconcluso</span>
+      </div>
+    </div>
+
+    <!-- Anti-Fingerprinting -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · evasión</div>
+          <div class="ag-name">Anti-Fingerprinting</div>
+        </div>
+        <div class="ag-badge clear">Limpio · 8</div>
+      </div>
+      <div class="ag-insight">El canvasId es estable entre cargas y no detecté técnicas de canvas noise o spoofing. Sin señales de extensiones tipo uBlock o Privacy Badger que modifiquen el fingerprint. Esto es positivo, aunque el audio fingerprint aún no está implementado.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">canvas estable</span>
+        <span class="ag-tag">sin canvas noise</span>
+        <span class="ag-tag">audio pendiente</span>
+      </div>
+    </div>
+
+    <!-- Device Sharing -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · identidad</div>
+          <div class="ag-name">Device Sharing</div>
+        </div>
+        <div class="ag-badge clear">Sin datos · —</div>
+      </div>
+      <div class="ag-insight">Necesito historial de sesiones para detectar múltiples usuarios en el mismo device. El device ID existe pero es la primera sesión registrada. Volvé a consultarme cuando acumule 3+ sesiones.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">primera sesión</span>
+        <span class="ag-tag">requiere historial</span>
+      </div>
+    </div>
+
+    <!-- Behavioral Anomaly -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · comportamiento</div>
+          <div class="ag-name">Behavioral Anomaly</div>
+        </div>
+        <div class="ag-badge clear">Sin datos · —</div>
+      </div>
+      <div class="ag-insight">Las señales de mouse, teclado y touch no están siendo capturadas aún. Sin esos datos no puedo distinguir humano de bot a nivel comportamental. Es el siguiente bloque crítico a implementar.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">mouse pendiente</span>
+        <span class="ag-tag">keyboard pendiente</span>
+        <span class="ag-tag">touch pendiente</span>
+      </div>
+    </div>
+
+    <!-- Account Takeover -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · cuenta</div>
+          <div class="ag-name">Account Takeover</div>
+        </div>
+        <div class="ag-badge clear">Sin datos · —</div>
+      </div>
+      <div class="ag-insight">Para detectar ATO necesito cruzar el device con la cuenta del usuario: velocidad de cambios, impossible travel, switch de device. Sin ese contexto de cuenta no puedo emitir veredicto.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">requiere contexto cuenta</span>
+        <span class="ag-tag">velocity pendiente</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Vote strip -->
+  <div style="margin-bottom:10px">
+    <div class="lbl" id="vote-strip-lbl" style="margin-bottom:8px">Votos de los 10 agentes</div>
+    <div class="vote-strip" id="insights-vote-strip">
+      <div class="vote-item risk"><div class="vote-dot"></div>Emulator/VM · 82</div>
+      <div class="vote-item risk"><div class="vote-dot"></div>Proxy/VPN · 74</div>
+      <div class="vote-item risk"><div class="vote-dot"></div>Browser Spoofing · 61</div>
+      <div class="vote-item warn"><div class="vote-dot"></div>Incognito · 34</div>
+      <div class="vote-item ok"><div class="vote-dot"></div>Bot · 12</div>
+      <div class="vote-item ok"><div class="vote-dot"></div>Anti-FP · 8</div>
+      <div class="vote-item ok"><div class="vote-dot"></div>Tor · 5</div>
+      <div class="vote-item ok" style="opacity:.5"><div class="vote-dot"></div>Device Sharing · —</div>
+      <div class="vote-item ok" style="opacity:.5"><div class="vote-dot"></div>Behavioral · —</div>
+      <div class="vote-item ok" style="opacity:.5"><div class="vote-dot"></div>ATO · —</div>
+    </div>
+  </div>
+
+  <!-- Orchestrator -->
+  <div class="orchestrator">
+    <div class="orc-top">
+      <div>
+        <div class="orc-eyebrow">Agente orquestador · decisión final</div>
+        <div class="orc-title" id="orc-title">Revisión manual recomendada — perfil de emulador con VPN</div>
+      </div>
+      <div class="orc-score-wrap">
+        <div class="orc-score" id="orc-score">78</div>
+        <div class="orc-score-sub">score agregado</div>
+      </div>
+    </div>
+    <div class="orc-insight" id="orc-insight">Recibí los reportes de los 10 agentes. Tres me preocupan especialmente: el Emulator/VM detectó inconsistencias físicas de hardware, el Proxy/VPN encontró la combinación timezone/idioma que en nuestra red es señal fuerte de VPN activa, y el Browser Spoofing confirmó un renderer ANGLE que no matchea con hardware real. Solos, cualquiera sería revisable. Los tres juntos configuran el patrón más común de fraude por emulador en la región.</div>
+    <div class="orc-footer" id="orc-footer">
+      <span class="orc-tag">3 alertas · 1 aviso · 3 limpios · 3 sin datos</span>
+      <span class="orc-tag" id="orc-tag-score">score: 78 / 100</span>
+      <span class="orc-tag">revisar manualmente</span>
+    </div>
+    <div class="orc-ecosystem" id="orc-ecosystem">
+      <strong>Señal de ecosistema Koin:</strong> Este patrón de señales (ANGLE GPU + timezone/lang mismatch + cpuSpeed anómalo) coincide con el clúster de ataque activo que bloqueamos en <strong>847 devices</strong> en las últimas 24h, distribuido en <strong>12 merchants</strong> de la red. No es un device aislado — es parte de una campaña coordinada.
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ VECTORS ═══════════════════════════════ -->
+<div class="pane" id="pane-vectors">
+
+  <div class="vectors-layout">
+
+    <!-- Left sidebar -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="lbl" style="margin-bottom:12px">Score global</div>
+        <div class="ring-wrap">
+          <div class="ring-svg">
+            <svg viewBox="0 0 110 110" width="110" height="110">
+              <circle cx="55" cy="55" r="46" stroke="var(--border)" stroke-width="9" fill="none"/>
+              <circle id="ring-arc" cx="55" cy="55" r="46" stroke="var(--r600)" stroke-width="9" fill="none"
+                stroke-dasharray="289" stroke-dashoffset="64" stroke-linecap="round"
+                style="transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"/>
+            </svg>
+            <div class="ring-num" style="color:var(--r600)" id="ring-num">78</div>
+          </div>
+          <div class="ring-lbl" id="ring-lbl">riesgo alto · revisar</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="lbl" style="margin-bottom:12px">Composición</div>
+        <div id="vectors-comp">
+          <div class="comp-row"><span class="comp-lbl">Emulator / VM</span><div class="comp-bar-bg"><div class="comp-bar" style="width:82%;background:var(--r600)"></div></div><span class="comp-val" style="color:var(--r600)">82</span></div>
+          <div class="comp-row"><span class="comp-lbl">Proxy / VPN</span><div class="comp-bar-bg"><div class="comp-bar" style="width:74%;background:var(--r600)"></div></div><span class="comp-val" style="color:var(--r600)">74</span></div>
+          <div class="comp-row"><span class="comp-lbl">Browser Spoofing</span><div class="comp-bar-bg"><div class="comp-bar" style="width:61%;background:var(--a600)"></div></div><span class="comp-val" style="color:var(--a600)">61</span></div>
+          <div class="comp-row"><span class="comp-lbl">Incognito</span><div class="comp-bar-bg"><div class="comp-bar" style="width:34%;background:var(--a600)"></div></div><span class="comp-val" style="color:var(--a600)">34</span></div>
+          <div class="comp-row"><span class="comp-lbl">Bot</span><div class="comp-bar-bg"><div class="comp-bar" style="width:12%;background:var(--g600)"></div></div><span class="comp-val" style="color:var(--t3)">12</span></div>
+          <div class="comp-row"><span class="comp-lbl">Anti-Fingerprinting</span><div class="comp-bar-bg"><div class="comp-bar" style="width:8%;background:var(--g600)"></div></div><span class="comp-val" style="color:var(--t3)">8</span></div>
+          <div class="comp-row"><span class="comp-lbl">Tor</span><div class="comp-bar-bg"><div class="comp-bar" style="width:5%;background:var(--g600)"></div></div><span class="comp-val" style="color:var(--t3)">5</span></div>
+          <div class="comp-row" style="opacity:.4"><span class="comp-lbl">Device Sharing</span><div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div><span class="comp-val" style="color:var(--t4)">—</span></div>
+          <div class="comp-row" style="opacity:.4"><span class="comp-lbl">Behavioral</span><div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div><span class="comp-val" style="color:var(--t4)">—</span></div>
+          <div class="comp-row" style="opacity:.4"><span class="comp-lbl">Account Takeover</span><div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div><span class="comp-val" style="color:var(--t4)">—</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="lbl" style="margin-bottom:8px">Resumen</div>
+        <div id="vectors-summary" style="display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Vectores activos</span><span style="font-weight:600;color:var(--r600)">3 críticos · 1 aviso</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Limpios</span><span style="font-weight:600;color:var(--g700)">3</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Sin datos</span><span style="font-weight:600;color:var(--t3)">3</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Señales analizadas</span><span style="font-weight:600">47</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: vector table -->
+    <div class="vtable" id="vtable">
+      <div class="vt-head">
+        <div></div>
+        <div class="vt-hcell">Vector</div>
+        <div class="vt-hcell">Señales disparadoras</div>
+        <div class="vt-hcell">Score</div>
+        <div class="vt-hcell">Peso</div>
+        <div class="vt-hcell" style="text-align:right">Estado</div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--r600)"></div>
+        <div class="vt-name">Emulator / VM<small>hardware · gpu · cpu</small></div>
+        <div class="vt-signals"><span class="vt-sig">ANGLE GPU</span><span class="vt-sig">cores/speed ratio</span><span class="vt-sig">pixelRatio=1</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:82%;background:var(--r600)"></div></div><div class="vt-score" style="color:var(--r600)">82</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">30%</div>
+        <div class="vt-status"><span class="pill p-red">Crítico</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--r600)"></div>
+        <div class="vt-name">Proxy / VPN<small>geo · idioma · timezone</small></div>
+        <div class="vt-signals"><span class="vt-sig">timezone=-3</span><span class="vt-sig">lang=es-ES</span><span class="vt-sig">discordancia</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:74%;background:var(--r600)"></div></div><div class="vt-score" style="color:var(--r600)">74</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">25%</div>
+        <div class="vt-status"><span class="pill p-red">Crítico</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--a600)"></div>
+        <div class="vt-name">Browser Spoofing<small>fingerprint · webgl · ua</small></div>
+        <div class="vt-signals"><span class="vt-sig">gpuVendor</span><span class="vt-sig">WebGL mismatch</span><span class="vt-sig">UA inconsistente</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:61%;background:var(--a600)"></div></div><div class="vt-score" style="color:var(--a600)">61</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">20%</div>
+        <div class="vt-status"><span class="pill p-amber">Alerta</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--a600)"></div>
+        <div class="vt-name">Incognito<small>storage · privacidad</small></div>
+        <div class="vt-signals"><span class="vt-sig">privateBrowsing=false</span><span class="vt-sig">quota API ausente</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:34%;background:var(--a600)"></div></div><div class="vt-score" style="color:var(--a600)">34</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">10%</div>
+        <div class="vt-status"><span class="pill p-amber">Aviso</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--g600)"></div>
+        <div class="vt-name">Bot<small>automatización · webdriver</small></div>
+        <div class="vt-signals"><span class="vt-sig">webdriver=false</span><span class="vt-sig">JS normal</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:12%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">12</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">8%</div>
+        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--g600)"></div>
+        <div class="vt-name">Anti-Fingerprinting<small>canvas · evasión</small></div>
+        <div class="vt-signals"><span class="vt-sig">canvas estable</span><span class="vt-sig">sin noise</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:8%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">8</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">5%</div>
+        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--g600)"></div>
+        <div class="vt-name">Tor<small>exit nodes · RTT</small></div>
+        <div class="vt-signals"><span class="vt-sig">sin exit node</span><span class="vt-sig">RTT normal</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:5%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">5</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">2%</div>
+        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
+      </div>
+
+      <div class="vt-row roadmap">
+        <div class="vt-dot" style="background:var(--p200)"></div>
+        <div class="vt-name" style="color:var(--t3)">Device Sharing<small>historial · sesiones</small></div>
+        <div class="vt-signals"><span class="vt-sig">multi-user detection</span><span class="vt-sig">session history</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
+        <div class="vt-status"><span class="pill p-roadmap">Sin datos</span></div>
+      </div>
+
+      <div class="vt-row roadmap">
+        <div class="vt-dot" style="background:var(--p200)"></div>
+        <div class="vt-name" style="color:var(--t3)">Behavioral Anomaly<small>mouse · teclado · touch</small></div>
+        <div class="vt-signals"><span class="vt-sig">mouse events</span><span class="vt-sig">keyboard cadence</span><span class="vt-sig">touch pressure</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
+        <div class="vt-status"><span class="pill p-roadmap">Roadmap</span></div>
+      </div>
+
+      <div class="vt-row roadmap" style="border-bottom:none">
+        <div class="vt-dot" style="background:var(--p200)"></div>
+        <div class="vt-name" style="color:var(--t3)">Account Takeover<small>velocity · cuenta</small></div>
+        <div class="vt-signals"><span class="vt-sig">impossible travel</span><span class="vt-sig">device switch</span><span class="vt-sig">velocity</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
+        <div class="vt-status"><span class="pill p-roadmap">Roadmap</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ INTELLIGENCE ═══════════════════════════════ -->
+<div class="pane" id="pane-intel">
+
+  <div style="margin-bottom:16px">
+    <div class="lbl" style="margin-bottom:4px">Device intelligence</div>
+    <p style="font-size:.78rem;color:var(--t2);line-height:1.6">Qué encontramos cuando cruzamos las señales entre sí. Cada hallazgo combina múltiples datos para detectar algo que ninguna señal sola podría ver.</p>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="intel-filters">
+    <button class="if-btn active" onclick="filterIntel('all',this)">Todas</button>
+    <button class="if-btn" onclick="filterIntel('anomaly',this)">Anomalías</button>
+    <button class="if-btn" onclick="filterIntel('ok',this)">OK</button>
+    <button class="if-btn" onclick="filterIntel('bot',this)">Bot</button>
+    <button class="if-btn" onclick="filterIntel('emulator',this)">Emulator/VM</button>
+    <button class="if-btn" onclick="filterIntel('proxy',this)">Proxy/VPN</button>
+    <button class="if-btn" onclick="filterIntel('spoof',this)">Spoofing</button>
+    <span class="if-count" id="if-count"></span>
+  </div>
+
+  <!-- Dynamic sections rendered by JS -->
+  <div id="intel-dynamic"></div>
+
+  <!-- Static "Próximamente" section -->
+  <div class="sec" id="sec-soon">Lo que viene (pendiente de implementar)</div>
+  <div class="intel-grid">
+    <div class="intel-card" style="opacity:.45">
+      <div class="ic-head">
+        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+        <div class="ic-title">Si la huella cambia pero la GPU no → alguien la está borrando a propósito</div>
+        <div class="ic-vector">Anti-FP</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">canvasId != prev_canvasId AND gpuName == prev_gpuName → anti-fingerprinting activo</div>
+        <div class="ic-conclusion">Para detectar esto necesitamos comparar sesiones pasadas. Disponible en Fase 2.</div>
+      </div>
+    </div>
+    <div class="intel-card" style="opacity:.45">
+      <div class="ic-head">
+        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+        <div class="ic-title">Si dice ser un celular pero la pantalla es de escritorio → está mintiendo</div>
+        <div class="ic-vector">Browser Spoofing</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">ua_mobile=true AND screen.width &gt;= 1920 → spoofing de UA</div>
+        <div class="ic-conclusion">Muy fácil de detectar y muy confiable. Se agrega en la próxima iteración.</div>
+      </div>
+    </div>
+    <div class="intel-card" style="opacity:.45">
+      <div class="ic-head">
+        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+        <div class="ic-title">IP local diferente a IP pública → VPN confirmada</div>
+        <div class="ic-vector">Proxy/VPN</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">webrtc_local_ip != geoip_public → VPN confirmada</div>
+        <div class="ic-conclusion">La forma más directa de confirmar que alguien usa VPN. Requiere activar WebRTC en el collector.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ RAW SIGNALS ═══════════════════════════════ -->
+<div class="pane" id="pane-raw">
+
+  <div class="sig-legend">
+    <span>Estado de señal:</span>
+    <span class="pill p-new">NEW · próxima iteración</span>
+    <span class="pill p-roadmap">ROADMAP · detectado, no implementado</span>
+    <span style="font-size:.66rem;color:var(--t3)">· Sin badge = activa hoy (47 señales base)</span>
+  </div>
+
+  <!-- IDs -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--a50)"><svg viewBox="0 0 16 16" style="color:var(--amber)"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 6h12"/></svg></div>
+      <span class="ssh-title">Identificadores</span>
+      <span class="ssh-count">3 activas</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-key">organizationId</div>
+        <div class="sc-val sm">de4330cc45</div>
+      </div>
+      <div class="sc">
+        <div class="sc-key">sessionId</div>
+        <div class="sc-val sm" id="raw-sessionId">e62833c2cf246dd213...</div>
+        <div class="sc-desc">UUID único por link generado</div>
+      </div>
+      <div class="sc">
+        <div class="sc-key">device.id</div>
+        <div class="sc-val sm" id="raw-deviceId">2d3fda04d895...</div>
+        <div class="sc-desc">Hash estable del device</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Agent & OS -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--b50)"><svg viewBox="0 0 16 16" style="color:var(--b600)"><circle cx="8" cy="8" r="6"/><path d="M8 2a9 9 0 0 1 0 12M8 2a9 9 0 0 0 0 12M2 8h12"/></svg></div>
+      <span class="ssh-title">User Agent & OS</span>
+      <span class="ssh-count">7 activas · 1 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc risk" style="grid-column:1/-1">
+        <div class="sc-key">session.userAgent</div>
+        <div class="sc-val sm" id="raw-userAgent">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0...</div>
+      </div>
+      <div class="sc risk">
+        <div class="sc-key">session.os · platform</div>
+        <div class="sc-val md" id="raw-os">Win32</div>
+        <div class="sc-desc risk">OS deprecated · 71% fraude 90d</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">osVersion</span><span class="sc-rv risk" id="raw-osVersion">Windows 10</span></div>
+        <div class="sc-row"><span class="sc-rk">platform</span><span class="sc-rv" id="raw-platform">Win32</span></div>
+      </div>
+      <div class="sc warn">
+        <div class="sc-key">session.lang · timezone</div>
+        <div class="sc-val md" id="raw-lang">es-ES</div>
+        <div class="sc-desc warn">España · pero timezone -3 (ARG)</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">timezone</span><span class="sc-rv warn" id="raw-timezone">-3</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">navigator.languages</div>
+        <div class="sc-val sm" id="raw-languages">—</div>
+        <div class="sc-desc">Lista completa de idiomas preferidos del browser</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CPU & Hardware -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--a50)"><svg viewBox="0 0 16 16" style="color:var(--amber)"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M4 6H2M4 10H2M12 6h2M12 10h2M6 4V2M10 4V2M6 12v2M10 12v2"/></svg></div>
+      <span class="ssh-title">CPU & Hardware</span>
+      <span class="ssh-count">5 activas · 3 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc risk">
+        <div class="sc-key">cores · cpuSpeed · deviceMemory</div>
+        <div class="sc-val" id="raw-cores">14</div>
+        <div class="sc-desc risk">14 cores + 36ms avg → ratio anómalo</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">deviceMemory</span><span class="sc-rv" id="raw-memory">32 GB</span></div>
+        <div class="sc-row"><span class="sc-rk">cpuSpeed.average</span><span class="sc-rv risk" id="raw-cpuspeed">36.97ms</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-key">screen · resolution</div>
+        <div class="sc-val" id="raw-screen">1920×1080</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">colorDepth</span><span class="sc-rv" id="raw-colorDepth">32-bit</span></div>
+        <div class="sc-row"><span class="sc-rk">devicePixelRatio</span><span class="sc-rv warn" id="raw-dpr">1</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">touch.maxTouchPoints</div>
+        <div class="sc-val sm" id="raw-touch">—</div>
+        <div class="sc-desc">0 = desktop · &gt;0 = touchscreen o emulación</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">battery.level · charging</div>
+        <div class="sc-val sm">Battery API</div>
+        <div class="sc-desc">Hardware real vs VM · diferenciador clave</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">connection.type · rtt · downlink</div>
+        <div class="sc-val sm" id="raw-conn-type">—</div>
+        <div class="sc-desc">Tipo de red y latencia real</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GPU & WebGL -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><rect x="1" y="4" width="14" height="8" rx="1.5"/><path d="M4 8h8M4 8v2M8 8v2M12 8v2"/></svg></div>
+      <span class="ssh-title">GPU & WebGL</span>
+      <span class="ssh-count">3 activas · 7 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc risk">
+        <div class="sc-key">gpuVendor · gpuName</div>
+        <div class="sc-val md" id="raw-gpuVendor">Google Inc. (Intel)</div>
+        <div class="sc-desc risk">ANGLE renderer → virtualización 94%</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">gpuName</span><span class="sc-rv risk" id="raw-gpuName">ANGLE (Intel...)</span></div>
+      </div>
+      <div class="sc ok">
+        <div class="sc-key">canvasId</div>
+        <div class="sc-val sm" id="raw-canvasId">61b631b748bcd2332d...</div>
+        <div class="sc-desc">Hash estable · sin canvas spoofing</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">audio.hash · sampleRate</div>
+        <div class="sc-val sm" id="raw-audio-hash">—</div>
+        <div class="sc-desc">AudioContext FP · alta discriminación</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">sampleRate</span><span class="sc-rv" id="raw-audio-sr">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">webgl.hash · extensions</div>
+        <div class="sc-val sm" id="raw-webgl-hash">—</div>
+        <div class="sc-desc">FP de GPU+driver por parámetros WebGL</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">extensions</span><span class="sc-rv" id="raw-webgl-ext">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">canvas.textHash · geometryHash</div>
+        <div class="sc-val sm" id="raw-canvas-text">—</div>
+        <div class="sc-desc">Rendering diferenciado por font engine + GPU AA</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">geometryHash</span><span class="sc-rv" id="raw-canvas-geo">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">speech.voices · count</div>
+        <div class="sc-val sm" id="raw-speech">—</div>
+        <div class="sc-desc">Voces TTS instaladas · fingerprint de OS</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">media.audioInputs · videoInputs</div>
+        <div class="sc-val sm" id="raw-media">—</div>
+        <div class="sc-desc">Devices de captura · 0 = headless/emulador</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">hardware.audioContextState (S061)</div>
+        <div class="sc-val sm" id="raw-audio-ctx-state">—</div>
+        <div class="sc-desc">Estado inicial del AudioContext · suspended permanente = headless</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">hardware.webgpu (S153–S156)</div>
+        <div class="sc-val sm" id="raw-webgpu">—</div>
+        <div class="sc-desc">WebGPU API · vendor · architecture · features · limits</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">vendor</span><span class="sc-rv" id="raw-webgpu-vendor">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage & Privacy -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--p50)"><svg viewBox="0 0 16 16" style="color:var(--p600)"><ellipse cx="8" cy="5" rx="5" ry="2.5"/><path d="M3 5v3c0 1.4 2.2 2.5 5 2.5S13 9.4 13 8V5"/><path d="M3 8v3c0 1.4 2.2 2.5 5 2.5S13 12.4 13 11V8"/></svg></div>
+      <span class="ssh-title">Storage & Privacy</span>
+      <span class="ssh-count">8 activas · 1 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc ok">
+        <div class="sc-key">storage flags</div>
+        <div class="sc-val md">Todos activos</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">cookies</span><span class="sc-rv ok" id="raw-cookies">true</span></div>
+        <div class="sc-row"><span class="sc-rk">localStorage</span><span class="sc-rv ok" id="raw-ls">true</span></div>
+        <div class="sc-row"><span class="sc-rk">sessionStorage</span><span class="sc-rv ok" id="raw-ss">true</span></div>
+        <div class="sc-row"><span class="sc-rk">indexedDB</span><span class="sc-rv ok" id="raw-idb">true</span></div>
+      </div>
+      <div class="sc warn">
+        <div class="sc-key">privateBrowsing · doNotTrack</div>
+        <div class="sc-val md" id="raw-private">false</div>
+        <div class="sc-desc warn">Flag directo · quota API pendiente</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">doNotTrack</span><span class="sc-rv" id="raw-dnt">false</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">storage.estimate().quota</div>
+        <div class="sc-val sm">Storage Quota API</div>
+        <div class="sc-desc">Detección de incógnito por quota &lt;120MB</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Browser capabilities -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--g50)"><svg viewBox="0 0 16 16" style="color:var(--g600)"><path d="M8 2C4.7 2 2 4.7 2 8s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z"/><path d="M8 5v3l2 2"/></svg></div>
+      <span class="ssh-title">Browser capabilities</span>
+      <span class="ssh-count">4 activas · 11 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-key">javaEnabled · javaScriptEnabled</div>
+        <div class="sc-val md">JS activo</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">javaEnabled</span><span class="sc-rv" id="raw-java">false</span></div>
+        <div class="sc-row"><span class="sc-rk">javaScriptEnabled</span><span class="sc-rv ok">true</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">automation.webdriver</div>
+        <div class="sc-val sm" id="raw-webdriver">—</div>
+        <div class="sc-desc">navigator.webdriver = true → Selenium / Playwright</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">automation.artifacts</div>
+        <div class="sc-val sm" id="raw-artifacts">—</div>
+        <div class="sc-desc">Props de window de Selenium, Phantom, Nightmare</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">navigator.plugins count</div>
+        <div class="sc-val sm">Plugin enumeration</div>
+        <div class="sc-desc">0 plugins = headless/emulador</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">font detection list</div>
+        <div class="sc-val sm">Font enumeration</div>
+        <div class="sc-desc">Lista de fuentes instaladas</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">WebRTC IP leak</div>
+        <div class="sc-val sm">RTCPeerConnection</div>
+        <div class="sc-desc">IP local vs pública → VPN directa</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">performance.timing</div>
+        <div class="sc-val sm">Timing fingerprint</div>
+        <div class="sc-desc">Latencias que distinguen VM de HW</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">extension detection</div>
+        <div class="sc-val sm">Indirect ext. probing</div>
+        <div class="sc-desc">Detección indirecta de extensiones</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">automation.webDriverBiDi (S166)</div>
+        <div class="sc-val sm" id="raw-bidi">—</div>
+        <div class="sc-desc">WebDriver BiDi globals · CDP · chrome.debugger</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">automation.puppeteer (S168)</div>
+        <div class="sc-val sm" id="raw-puppeteer">—</div>
+        <div class="sc-desc">__puppeteer_* globals · HTMLElement.toString patch</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">automation.playwright (S169)</div>
+        <div class="sc-val sm" id="raw-playwright">—</div>
+        <div class="sc-desc">__playwright · __pw_* globals · UA playwright</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">automation.seleniumGrid (S170)</div>
+        <div class="sc-val sm" id="raw-selenium-grid">—</div>
+        <div class="sc-desc">html[webdriver] attr · SE_CDP · Selenium Grid globals</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Behavioral -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--p50)"><svg viewBox="0 0 16 16" style="color:var(--p600)"><path d="M3 8c0-2.8 2.2-5 5-5s5 2.2 5 5-2.2 5-5 5"/><path d="M8 10V8l1.5-1.5"/></svg></div>
+      <span class="ssh-title">Behavioral signals</span>
+      <span class="ssh-count">0 activas · 7 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">mouse.entropy · acceleration</div><div class="sc-val sm" id="raw-mouse">—</div><div class="sc-desc">Entropía Shannon · patrón: natural/robotic/erratic</div></div>
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">keyboard.timingCV · samples</div><div class="sc-val sm" id="raw-keyboard">—</div><div class="sc-desc">CV del timing de teclas · CV &lt;0.15 sugiere bot</div></div>
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">behavioral.clicks · count · CV</div><div class="sc-val sm" id="raw-clicks">—</div><div class="sc-desc">Total de clicks · CV del intervalo entre clicks</div></div>
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">behavioral.scroll · events · totalDY</div><div class="sc-val sm" id="raw-scroll">—</div><div class="sc-desc">Eventos de scroll · distancia acumulada en px</div></div>
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">behavioral.focus · blurCount</div><div class="sc-val sm" id="raw-focus">—</div><div class="sc-desc">Veces que el usuario cambió de tab o ventana</div></div>
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">behavioral.biometrics · avgSpeed</div><div class="sc-val sm" id="raw-biometrics">—</div><div class="sc-desc">Velocidad y aceleración promedio del mouse en px/ms</div></div>
+      <div class="sc"><div class="sc-status new">NEW</div><div class="sc-key">behavioral.history (S105b)</div><div class="sc-val sm" id="raw-history">—</div><div class="sc-desc">history.length · pushState · scrollRestoration</div></div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">behavioral.eventPropagation (S058)</div>
+        <div class="sc-val sm" id="raw-event-prop">—</div>
+        <div class="sc-desc">Delta capture→bubble de evento sintético · &lt;0ms = sospechoso</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">suspicious</span><span class="sc-rv" id="raw-event-sus">—</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- APIs Modernas (iter 4) -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--b50)"><svg viewBox="0 0 16 16" style="color:var(--b600)"><path d="M4 3h8l2 2-2 2H4L2 5l2-2z"/><path d="M4 9h8l2 2-2 2H4L2 11l2-2z"/></svg></div>
+      <span class="ssh-title">APIs Modernas</span>
+      <span class="ssh-count">0 activas · 1 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc" style="grid-column:1/-1">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.modernAPIs (S072–S085)</div>
+        <div class="sc-val sm" id="raw-modern-apis">—</div>
+        <div class="sc-desc">vibration · gamepad · bluetooth · usb · payment · share · notifications · fullscreen · pip · locks · wakeLock · serial</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile & Touch (iter 5) -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--g50)"><svg viewBox="0 0 16 16" style="color:var(--g600)"><rect x="4" y="1" width="8" height="14" rx="1.5"/><circle cx="8" cy="12.5" r=".7" fill="currentColor" stroke="none"/><path d="M6 3.5h4"/></svg></div>
+      <span class="ssh-title">Mobile & Touch</span>
+      <span class="ssh-count">0 activas · 2 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">mobile.touchConsistency (S088)</div>
+        <div class="sc-val sm" id="raw-touch-consistency">—</div>
+        <div class="sc-desc">API táctil vs maxTouchPoints — inconsistencia → emulación</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">consistent</span><span class="sc-rv" id="raw-touch-ok">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">mobile.screenOrientation (S089)</div>
+        <div class="sc-val sm" id="raw-orient-type">—</div>
+        <div class="sc-desc">Tipo y ángulo de orientación · lock soportado</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">lockSupported</span><span class="sc-rv" id="raw-orient-lock">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VM Detection (iter 5) -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><rect x="1" y="3" width="14" height="9" rx="1.5"/><path d="M5 12v2M11 12v2M3 14h10"/><path d="M5 7h6M5 9.5h3"/></svg></div>
+      <span class="ssh-title">VM Detection</span>
+      <span class="ssh-count">0 activas · 3 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">vm.indicators (S092)</div>
+        <div class="sc-val sm" id="raw-vm-indicators">—</div>
+        <div class="sc-desc">GPU strings · resolución · cores → firma de VM</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">score</span><span class="sc-rv" id="raw-vm-score">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">vm.environment (S093+S094)</div>
+        <div class="sc-val sm" id="raw-env-flags">—</div>
+        <div class="sc-desc">iframe · opener · storage bloqueado · sandboxing</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">vm.browser (S095)</div>
+        <div class="sc-val sm" id="raw-browser-runtime">—</div>
+        <div class="sc-desc">Chromium vs Firefox vs Safari · versión de Chrome</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Red & WebRTC -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--b50)"><svg viewBox="0 0 16 16" style="color:var(--b600)"><circle cx="8" cy="8" r="5"/><path d="M3 8h10M8 3c-2 2-2 8 0 10M8 3c2 2 2 8 0 10"/></svg></div>
+      <span class="ssh-title">Red & WebRTC</span>
+      <span class="ssh-count">0 activas · 6 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">webrtc.localIPs</div>
+        <div class="sc-val sm" id="raw-webrtc-ips">—</div>
+        <div class="sc-desc">IPs locales vía RTCPeerConnection sin permisos</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">network.downlink · rtt · effectiveType</div>
+        <div class="sc-val sm" id="raw-net-speed">—</div>
+        <div class="sc-desc">Velocidad y latencia estimada de la conexión</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">network.httpVersion</div>
+        <div class="sc-val sm" id="raw-http-version">—</div>
+        <div class="sc-desc">HTTP/1.1 vs HTTP/2 vía fetch timing</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">webrtc.dataChannel</div>
+        <div class="sc-val sm" id="raw-webrtc-dc">—</div>
+        <div class="sc-desc">Soporte de RTCDataChannel</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">network.interfaces (S098)</div>
+        <div class="sc-val sm" id="raw-net-interfaces">—</div>
+        <div class="sc-desc">Cantidad de interfaces · IPs privadas · IPv6 detectado</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">network.webSocket · cacheAPIs (S102+S104)</div>
+        <div class="sc-val sm" id="raw-ws-api">—</div>
+        <div class="sc-desc">WebSocket · CacheStorage · StorageEstimate</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">cacheStorage</span><span class="sc-rv" id="raw-cache-api">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fonts -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--a50)"><svg viewBox="0 0 16 16" style="color:var(--amber)"><path d="M3 12V4l5 8 5-8v8"/><path d="M5.5 9h5"/></svg></div>
+      <span class="ssh-title">Fonts</span>
+      <span class="ssh-count">0 activas · 3 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">fonts.count · hash</div>
+        <div class="sc-val sm" id="raw-fonts-count">—</div>
+        <div class="sc-desc">Cantidad de fuentes detectadas vía canvas</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">hash</span><span class="sc-rv" id="raw-fonts-hash">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">fonts.detected</div>
+        <div class="sc-val sm" id="raw-fonts-list">—</div>
+        <div class="sc-desc">Primeras fuentes detectadas (fingerprint de OS)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sistema & APIs -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--g50)"><svg viewBox="0 0 16 16" style="color:var(--g600)"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7h6M5 10h4"/></svg></div>
+      <span class="ssh-title">Sistema & APIs</span>
+      <span class="ssh-count">0 activas · 6 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.APIs</div>
+        <div class="sc-val sm" id="raw-sys-apis">—</div>
+        <div class="sc-desc">WebAssembly · Crypto · WebSQL · ServiceWorker · Geolocation</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.flags</div>
+        <div class="sc-val sm" id="raw-sys-flags">—</div>
+        <div class="sc-desc">SharedArrayBuffer · WebXR · PointerEvents · mimeTypes</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">navigator.plugins</div>
+        <div class="sc-val sm" id="raw-plugins-count">—</div>
+        <div class="sc-desc">0 plugins = headless probable</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">permissions API</div>
+        <div class="sc-val sm" id="raw-permissions">—</div>
+        <div class="sc-desc">notifications · camera · microphone</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">jsEngine · memory</div>
+        <div class="sc-val sm" id="raw-js-engine">—</div>
+        <div class="sc-desc">JS engine fingerprint · heap limit</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">heapLimit</span><span class="sc-rv" id="raw-js-heap">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.webAuthn (S139)</div>
+        <div class="sc-val sm" id="raw-webauthn">—</div>
+        <div class="sc-desc">PublicKeyCredential · navigator.credentials — biometría / FIDO2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Anti-Evasión -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><path d="M8 2L3 5v4c0 3 2.3 5.3 5 6 2.7-.7 5-3 5-6V5L8 2z"/></svg></div>
+      <span class="ssh-title">Anti-Evasión</span>
+      <span class="ssh-count">0 activas · 5 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">devTools.open</div>
+        <div class="sc-val sm" id="raw-devtools">—</div>
+        <div class="sc-desc">DevTools abiertos → debugging / inspección activa</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">canvas.poisoning</div>
+        <div class="sc-val sm" id="raw-canvas-poison">—</div>
+        <div class="sc-desc">Mismo canvas renderizado 2x → valores distintos</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">antiFingerprinting</div>
+        <div class="sc-val sm" id="raw-anti-fp">—</div>
+        <div class="sc-desc">Noise injection · canvas blocking · UA spoof detectado</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">evasion.privacyTools (S090)</div>
+        <div class="sc-val sm" id="raw-privacy-tools">—</div>
+        <div class="sc-desc">Brave · Firefox RFP · Tor Browser · DoNotTrack</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">dntEnabled</span><span class="sc-rv" id="raw-dnt-flag">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">evasion.extensions (S091)</div>
+        <div class="sc-val sm" id="raw-extensions">—</div>
+        <div class="sc-desc">Chrome runtime · globals inyectados por extensiones</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance & Headless -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--p50)"><svg viewBox="0 0 16 16" style="color:var(--p600)"><path d="M2 12L5.5 7l3 4L11 6l3 5"/></svg></div>
+      <span class="ssh-title">Performance & Headless</span>
+      <span class="ssh-count">0 activas · 7 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">wasm.hash · supported</div>
+        <div class="sc-val sm" id="raw-wasm-hash">—</div>
+        <div class="sc-desc">WASM compile fingerprint · runtime ID</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">gpu.renderTime</div>
+        <div class="sc-val sm" id="raw-gpu-perf">—</div>
+        <div class="sc-desc">Tiempo de render WebGL → diferencia VM vs GPU real</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">perf.timingResolution</div>
+        <div class="sc-val sm" id="raw-timing-res">—</div>
+        <div class="sc-desc">Resolución de performance.now() · reducida en modo privado</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">headless.indicators · score</div>
+        <div class="sc-val sm" id="raw-headless-score">—</div>
+        <div class="sc-desc">Indicadores de browser headless (Puppeteer, Playwright)</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">indicators</span><span class="sc-rv" id="raw-headless-ind">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">dom.speed · resourceLoading</div>
+        <div class="sc-val sm" id="raw-dom-speed">—</div>
+        <div class="sc-desc">Velocidad de operaciones DOM · recursos cargados</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">resources</span><span class="sc-rv" id="raw-res-load">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">perf.memoryAllocation (S096)</div>
+        <div class="sc-val sm" id="raw-mem-alloc">—</div>
+        <div class="sc-desc">Tiempo de allocar 5k objetos JS → velocidad del engine</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">perf.cpuThrottling (S097)</div>
+        <div class="sc-val sm" id="raw-cpu-throttle">—</div>
+        <div class="sc-desc">Ratio último/primer benchmark → thermal throttling</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">throttlingDetected</span><span class="sc-rv" id="raw-throttle-flag">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Automation (iter 6) -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1.5"/><path d="M5 3.5C3.2 4.6 2 6.2 2 8"/><path d="M11 3.5C12.8 4.6 14 6.2 14 8"/></svg></div>
+      <span class="ssh-title">AI Automation</span>
+      <span class="ssh-count">0 activas · 6 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">aiAutomation.patterns (S106)</div>
+        <div class="sc-val sm" id="raw-ai-patterns">—</div>
+        <div class="sc-desc">Comportamiento demasiado regular → score AI compuesto</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">suspiciousAI</span><span class="sc-rv" id="raw-ai-suspicious">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">aiAutomation.mlFrameworks (S107)</div>
+        <div class="sc-val sm" id="raw-ml-frameworks">—</div>
+        <div class="sc-desc">TensorFlow.js · ONNX · brain.js · ml5 en window</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">aiAutomation.randomness (S108)</div>
+        <div class="sc-val sm" id="raw-randomness">—</div>
+        <div class="sc-desc">Chi-square de Math.random() · pares sospechosos · PRNG nativo</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">possiblySeeded</span><span class="sc-rv" id="raw-prng-seeded">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">aiAutomation.typingPatterns (S109)</div>
+        <div class="sc-val sm" id="raw-typing">—</div>
+        <div class="sc-desc">Pausas entre palabras · teclas rápidas → humanidad del typing</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">humanLikeTyping</span><span class="sc-rv" id="raw-typing-human">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">aiAutomation.responseTime (S110)</div>
+        <div class="sc-val sm" id="raw-response-time">—</div>
+        <div class="sc-desc">CV de intervalos entre clicks · demasiado consistente = AI</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">tooConsistent</span><span class="sc-rv" id="raw-rt-consistent">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">aiAutomation.decisionTree (S111)</div>
+        <div class="sc-val sm" id="raw-decision-tree">—</div>
+        <div class="sc-desc">Ratio recto/total del camino del mouse · >0.95 = script</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">suspiciouslyStraight</span><span class="sc-rv" id="raw-dt-straight">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JSON Export -->
+  <div style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span class="lbl">Device data · JSON completo</span>
+      <button id="btn-copy-json" onclick="copyJSON()" style="font-size:.66rem;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--t1);cursor:pointer;font-family:var(--sans);transition:background .12s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='var(--surface)'">Copiar JSON</button>
+    </div>
+    <pre id="json-export" style="font-family:var(--mono);font-size:.62rem;background:var(--t1);color:#e5e7eb;border-radius:7px;padding:14px;overflow:auto;max-height:400px;line-height:1.6;white-space:pre"></pre>
+  </div>
+
+</div><!-- /raw -->
+
+</div>
+</div>
+
+<script src="../data/dummy_session.js"></script>
+<script>
+// ── Leer sesión ──────────────────────────────────────────────────────────────
+const raw = sessionStorage.getItem('koin_session_data')
+const SESSION = raw ? JSON.parse(raw) : DUMMY_SESSION
+
+// Normalizar schema del collector {sessionId, session, device} → {meta, signals}
+if (SESSION && !SESSION.meta && SESSION.sessionId) {
+  SESSION.meta = {
+    sessionId:    SESSION.sessionId,
+    timestamp:    Date.now(),
+    overallScore: null,
+    verdictLabel: null,
+    verdict:      null
+  }
+  SESSION.signals = Object.assign({}, SESSION.session || {}, {
+    deviceId: (SESSION.device || {}).id || ''
+  })
+}
+
+const rawIntel = sessionStorage.getItem('koin_intelligence_data')
+const intelligenceData = rawIntel ? JSON.parse(rawIntel) : null
+const findings = intelligenceData?.findings?.length
+  ? intelligenceData.findings
+  : DUMMY_SESSION.intelligence?.findings || []
+
+const rawInsights = sessionStorage.getItem('koin_insights_data')
+const insightsData = rawInsights ? JSON.parse(rawInsights) : null
+
+// ── DIAGNÓSTICO ──────────────────────────────────────────────────────────────
+console.log('[DASH] intelligenceData:', intelligenceData ? ('findings=' + (intelligenceData.findings?.length ?? '?')) : 'NULL')
+console.log('[DASH] insightsData:', insightsData ? ('score=' + insightsData.meta?.overallScore + ' agents=' + Object.keys(insightsData.agents || {}).join(',')) : 'NULL')
+console.log('[DASH] findings array length:', findings.length)
+// ────────────────────────────────────────────────────────────────────────────
+
+// ── Aplicar valores dinámicos ────────────────────────────────────────────────
+function applySession(S) {
+  const s = S.signals
+  const m = S.meta
+
+  // Topbar
+  const crumb = document.getElementById('tb-crumb')
+  if (crumb) crumb.textContent = 'Browser Intelligence · session ' + m.sessionId.slice(0, 10)
+
+  const tbTime = document.getElementById('tb-time')
+  if (tbTime) {
+    const d = new Date(m.timestamp)
+    const opts = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }
+    tbTime.textContent = d.toLocaleString('es', opts)
+  }
+
+  // Session strip
+  const sessMeta = document.getElementById('sess-meta')
+  if (sessMeta) {
+    const osLabel = s.osVersion || s.os || 'OS desconocido'
+    const tzLabel = s.timezone !== undefined ? s.timezone : '?'
+    const deviceLabel = (s.deviceId || '').slice(0, 10) || 'unknown'
+    sessMeta.textContent = osLabel + ' · timezone ' + tzLabel + ' · lang ' + (s.lang || '?') + ' · device ' + deviceLabel
+  }
+
+  // Verdict chip
+  const vcScore = document.getElementById('vc-score')
+  if (vcScore) vcScore.textContent = m.overallScore
+
+  const vcLabel = document.getElementById('vc-label')
+  if (vcLabel) vcLabel.textContent = m.verdictLabel || m.verdict
+
+  // Hero score (insights tab)
+  const heroScore = document.getElementById('hero-score')
+  if (heroScore) heroScore.textContent = m.overallScore
+
+  const heroVerdict = document.getElementById('hero-verdict-label')
+  if (heroVerdict) heroVerdict.textContent = m.verdictLabel || m.verdict
+
+  // Orchestrator score
+  const orcScore = document.getElementById('orc-score')
+  if (orcScore) orcScore.textContent = m.overallScore
+
+  const orcTagScore = document.getElementById('orc-tag-score')
+  if (orcTagScore) orcTagScore.textContent = 'score: ' + m.overallScore + ' / 100'
+
+  // Ring (vectors tab)
+  const ringNum = document.getElementById('ring-num')
+  if (ringNum) ringNum.textContent = m.overallScore
+
+  // Raw signals tab
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.textContent = val }
+
+  set('raw-sessionId', m.sessionId ? m.sessionId.slice(0, 20) + '...' : '—')
+  set('raw-deviceId', s.deviceId ? s.deviceId.slice(0, 14) + '...' : '—')
+  set('raw-userAgent', s.userAgent || '—')
+  set('raw-os', s.os || '—')
+  set('raw-osVersion', s.osVersion || '—')
+  set('raw-platform', s.os || '—')
+  set('raw-lang', s.lang || '—')
+  set('raw-timezone', s.timezone !== undefined ? s.timezone : '—')
+  set('raw-cores', s.cores !== null ? s.cores : '—')
+  set('raw-memory', s.deviceMemory ? s.deviceMemory + ' GB' : (s.deviceMemory === null ? '—' : '—'))
+  set('raw-cpuspeed', s.cpuSpeed?.average ? s.cpuSpeed.average.toFixed(2) + 'ms' : (s.cpuSpeedAvg ? s.cpuSpeedAvg + 'ms' : '—'))
+  if (s.screen) {
+    set('raw-screen', (s.screen.width || '?') + '×' + (s.screen.height || '?'))
+    set('raw-colorDepth', s.screen.colorDepth ? s.screen.colorDepth + '-bit' : '—')
+    set('raw-dpr', s.screen.devicePixelRatio !== undefined ? s.screen.devicePixelRatio : (s.devicePixelRatio !== undefined ? s.devicePixelRatio : '—'))
+  }
+  set('raw-gpuVendor', s.gpuVendor || '—')
+  set('raw-gpuName', s.gpuName ? s.gpuName.slice(0, 20) + '...' : '—')
+  set('raw-canvasId', s.canvasId ? s.canvasId.slice(0, 18) + '...' : '—')
+  set('raw-cookies', s.cookiesEnabled !== undefined ? String(s.cookiesEnabled) : '—')
+  set('raw-ls', s.localStorage !== undefined ? String(s.localStorage) : '—')
+  set('raw-ss', s.sessionStorage !== undefined ? String(s.sessionStorage) : '—')
+  set('raw-idb', s.indexedDB !== undefined ? String(s.indexedDB) : '—')
+  set('raw-private', s.privateBrowsing !== undefined ? String(s.privateBrowsing) : '—')
+  set('raw-dnt', s.doNotTrack !== undefined ? String(s.doNotTrack) : '—')
+  set('raw-java', s.javaEnabled !== undefined ? String(s.javaEnabled) : '—')
+
+  // ── Iteración 1 ──────────────────────────────────────────────────────────
+  const abbrev = (h, n = 14) => h ? h.slice(0, n) + '...' : '—'
+
+  const hw = S.hardware || {}
+  set('raw-audio-hash', abbrev(hw.audio?.hash))
+  set('raw-audio-sr',   hw.audio?.sampleRate ? hw.audio.sampleRate + ' Hz' : '—')
+  set('raw-webgl-hash', abbrev(hw.webgl?.hash))
+  set('raw-webgl-ext',  hw.webgl?.extensions ? hw.webgl.extensions.length + ' exts' : '—')
+  set('raw-canvas-text', abbrev(hw.canvas?.textHash))
+  set('raw-canvas-geo',  abbrev(hw.canvas?.geometryHash))
+  set('raw-speech', hw.speech?.count > 0 ? hw.speech.count + ' voces' : (hw.speech?.count === 0 ? '0 (headless?)' : '—'))
+  set('raw-media',  hw.media ? (hw.media.audioInputs ?? '?') + ' audio · ' + (hw.media.videoInputs ?? '?') + ' video' : '—')
+
+  const sys = S.system || {}
+  set('raw-languages', sys.languages?.length ? sys.languages.join(', ') : '—')
+  set('raw-touch', sys.touchSupport?.maxTouchPoints !== undefined ? sys.touchSupport.maxTouchPoints + ' puntos' : '—')
+
+  const auto = S.automation || {}
+  set('raw-webdriver', auto.webdriver !== undefined ? String(auto.webdriver) : '—')
+  set('raw-artifacts', auto.automationArtifacts?.length ? auto.automationArtifacts.join(', ') : 'ninguno')
+
+  const net = S.network || {}
+  set('raw-conn-type', net.connectionType || '—')
+
+  const beh = S.behavioral || {}
+  const mouseVal = beh.mouse?.entropy != null
+    ? beh.mouse.entropy + ' bits · ' + (beh.mouse.acceleration?.pattern || '?') + ' · ' + (beh.mouse.samples || 0) + ' samples'
+    : (beh.mouse?.samples ? beh.mouse.samples + ' samples (sin mover)' : '—')
+  set('raw-mouse', mouseVal)
+  const kbVal = beh.keyboard?.timingCV != null
+    ? 'CV ' + beh.keyboard.timingCV + ' · ' + (beh.keyboard.samples || 0) + ' keys'
+    : (beh.keyboard?.samples ? beh.keyboard.samples + ' keys' : '—')
+  set('raw-keyboard', kbVal)
+
+  // ── Iteración 2+3 ──────────────────────────────────────────────────────────
+
+  // Behavioral extended
+  const clk = beh.clicks || {}
+  set('raw-clicks', clk.count != null ? clk.count + ' clicks' + (clk.cv != null ? ' · CV ' + clk.cv : '') : '—')
+  const scr = beh.scroll || {}
+  set('raw-scroll', scr.events != null ? scr.events + ' eventos · ' + Math.round(scr.totalDY || 0) + 'px' : '—')
+  set('raw-focus', beh.focus?.blurCount != null ? beh.focus.blurCount + ' focus lost' : '—')
+  set('raw-biometrics', beh.biometrics?.avgSpeed != null ? 'vel ' + beh.biometrics.avgSpeed.toFixed(1) + ' px/ms' : '—')
+  set('raw-history', beh.historyLength != null ? beh.historyLength + ' entradas' : '—')
+
+  // Red & WebRTC
+  const netIPs = net.localIPs?.length ? net.localIPs.join(', ') : (net.webrtcSuccess === false ? 'sin acceso' : '—')
+  set('raw-webrtc-ips', netIPs)
+  const netSpeed = [
+    net.downlink != null ? net.downlink + ' Mbps' : null,
+    net.rtt != null ? net.rtt + 'ms rtt' : null,
+    net.effectiveType || null,
+  ].filter(Boolean).join(' · ')
+  set('raw-net-speed', netSpeed || '—')
+  set('raw-http-version', net.httpVersion || '—')
+  set('raw-webrtc-dc', net.webrtcDataChannel != null ? String(net.webrtcDataChannel) : '—')
+
+  // Fonts
+  const fnts = S.fonts || {}
+  set('raw-fonts-count', fnts.count != null ? fnts.count + ' fuentes' : '—')
+  set('raw-fonts-hash', fnts.hash ? abbrev(fnts.hash) : '—')
+  set('raw-fonts-list', fnts.detected?.length ? fnts.detected.slice(0, 8).join(', ') + (fnts.detected.length > 8 ? '…' : '') : '—')
+
+  // Sistema & APIs
+  if (sys.webAssembly != null) {
+    const apis = [
+      sys.webAssembly ? 'WASM' : null,
+      sys.cryptoAPI ? 'Crypto' : null,
+      sys.webSQL ? 'WebSQL' : null,
+      sys.serviceWorker ? 'SW' : null,
+      sys.geolocationAvailable ? 'Geo' : null,
+    ].filter(Boolean)
+    set('raw-sys-apis', apis.length ? apis.join(' · ') : 'ninguna')
+  }
+  if (sys.sharedArrayBuffer != null) {
+    const flags = [
+      sys.sharedArrayBuffer ? 'SAB' : null,
+      sys.webXR ? 'WebXR' : null,
+      sys.pointerEvents ? 'PointerEv' : null,
+      sys.mimeTypesCount != null ? sys.mimeTypesCount + ' mimes' : null,
+    ].filter(Boolean)
+    set('raw-sys-flags', flags.length ? flags.join(' · ') : 'ninguno')
+  }
+  set('raw-plugins-count', sys.plugins?.count != null ? sys.plugins.count + ' plugins' : '—')
+  if (sys.permissions) {
+    const perms = Object.entries(sys.permissions).map(([k, v]) => k + ':' + v).join(' · ')
+    set('raw-permissions', perms || '—')
+  }
+  set('raw-js-engine', sys.jsEngine?.id || (typeof sys.jsEngine === 'string' ? sys.jsEngine : null) || '—')
+  set('raw-js-heap', sys.memory?.jsHeapSizeLimit ? Math.round(sys.memory.jsHeapSizeLimit / 1048576) + ' MB' : '—')
+
+  // Anti-Evasión
+  const ev = S.evasion || {}
+  set('raw-devtools', ev.devTools?.open != null ? String(ev.devTools.open) : '—')
+  set('raw-canvas-poison', ev.canvasPoisoning?.detected != null ? String(ev.canvasPoisoning.detected) : '—')
+  if (ev.antiFingerprinting) {
+    const afp = ev.antiFingerprinting
+    const afpVal = afp.detected != null ? String(afp.detected) : JSON.stringify(afp).slice(0, 40)
+    set('raw-anti-fp', afpVal)
+  }
+
+  // Performance & Headless
+  set('raw-wasm-hash', hw.wasm?.hash ? abbrev(hw.wasm.hash) : (hw.wasm?.supported != null ? 'soportado: ' + String(hw.wasm.supported) : '—'))
+  set('raw-gpu-perf', hw.gpu?.renderTime != null ? hw.gpu.renderTime + 'ms render' : '—')
+  set('raw-timing-res', S.perf?.timingResolution != null ? S.perf.timingResolution + 'ms' : '—')
+  const hl = S.headless || {}
+  set('raw-headless-score', hl.score != null ? hl.score + ' / 10 indicadores' : '—')
+  set('raw-headless-ind', hl.indicators?.length ? hl.indicators.join(', ') : 'ninguno')
+  set('raw-dom-speed', beh.domSpeed?.avgMs != null ? beh.domSpeed.avgMs + 'ms avg' : (typeof beh.domSpeed === 'number' ? beh.domSpeed + 'ms' : '—'))
+  set('raw-res-load', beh.resourceLoading?.count != null ? beh.resourceLoading.count + ' recursos' : '—')
+
+  // History (S105b)
+  const hist = beh.history || {}
+  set('raw-history', hist.length != null
+    ? hist.length + ' entradas · ' + (hist.scrollRestoration || '?')
+    : (beh.historyLength != null ? beh.historyLength + ' entradas' : '—'))
+
+  // ── Iteración 4 ─────────────────────────────────────────────────────────
+  const ma = S.system?.modernAPIs || {}
+  if (Object.keys(ma).length) {
+    const on  = Object.entries(ma).filter(([,v]) => v === true || (typeof v === 'string' && v !== 'unsupported')).map(([k]) => k)
+    const off = Object.entries(ma).filter(([,v]) => v === false || v === 'unsupported').map(([k]) => k)
+    set('raw-modern-apis', on.length + ' activas: ' + on.join(', '))
+  }
+
+  // ── Iteración 5 ─────────────────────────────────────────────────────────
+
+  // Mobile & Touch
+  const mob = S.mobile || {}
+  const tc = mob.touchConsistency || {}
+  set('raw-touch-consistency', tc.hasTouchAPI != null ? 'API: ' + tc.hasTouchAPI + ' · pts: ' + (tc.maxTouchPoints ?? '?') : '—')
+  set('raw-touch-ok', tc.consistent != null ? String(tc.consistent) : '—')
+  const so = mob.screenOrientation || {}
+  set('raw-orient-type', so.type || (so.type === null ? 'sin API' : '—'))
+  set('raw-orient-lock', so.lockSupported != null ? String(so.lockSupported) : '—')
+
+  // VM Detection
+  const vm = S.vm || {}
+  const vmi = vm.indicators || {}
+  set('raw-vm-indicators', vmi.indicators?.length ? vmi.indicators.join(', ') : 'ninguno')
+  set('raw-vm-score', vmi.score != null ? vmi.score + ' indicadores' : '—')
+  const envf = vm.environment || {}
+  const envParts = [
+    envf.isIframe        ? 'iframe'           : null,
+    envf.hasOpener       ? 'has-opener'        : null,
+    envf.sandboxedStorage? 'storage-bloqueado' : null,
+    envf.windowNameSet   ? 'window.name-set'   : null,
+  ].filter(Boolean)
+  set('raw-env-flags', envParts.length ? envParts.join(' · ') : 'entorno normal')
+  const br = vm.browser || {}
+  const brParts = [
+    br.chromium ? 'Chromium' + (br.chromeVersion ? ' v' + br.chromeVersion : '') : null,
+    br.firefox  ? 'Firefox' : null,
+    br.safari   ? 'Safari'  : null,
+  ].filter(Boolean)
+  set('raw-browser-runtime', brParts.join(' / ') || '—')
+
+  // Privacy Tools & Extensions
+  const pt = ev.privacyTools || {}
+  set('raw-privacy-tools', pt.tools?.length ? pt.tools.join(', ') : 'ninguna detectada')
+  set('raw-dnt-flag', pt.flags?.dntEnabled != null ? String(pt.flags.dntEnabled) : '—')
+  const extDet = ev.extensions || {}
+  set('raw-extensions', extDet.count > 0 ? extDet.detected.join(', ') : 'ninguna detectada')
+
+  // Red & WebRTC iter 5
+  const ifaces = net.interfaces || {}
+  set('raw-net-interfaces', ifaces.ipCount != null ? ifaces.ipCount + ' IPs · priv:' + ifaces.hasPrivateIP + ' · IPv6:' + ifaces.hasIPv6 : '—')
+  set('raw-ws-api', net.webSocket?.supported != null ? 'supported: ' + net.webSocket.supported : '—')
+  set('raw-cache-api', net.cacheAPIs?.cacheStorage != null ? String(net.cacheAPIs.cacheStorage) : '—')
+
+  // Performance iter 5
+  set('raw-mem-alloc', S.perf?.memoryAllocation?.allocationMs != null ? S.perf.memoryAllocation.allocationMs + 'ms' : '—')
+  const ct = S.perf?.cpuThrottling || {}
+  set('raw-cpu-throttle', ct.throttlingRatio != null ? 'ratio ' + ct.throttlingRatio : '—')
+  set('raw-throttle-flag', ct.throttlingDetected != null ? String(ct.throttlingDetected) : '—')
+
+  // ── Señales adicionales ──────────────────────────────────────────────────
+
+  // S058 — Event propagation
+  const ep = beh.eventPropagation || {}
+  set('raw-event-prop', ep.deltaBubbleMs != null ? ep.deltaBubbleMs + 'ms delta' : '—')
+  set('raw-event-sus', ep.suspicious != null ? String(ep.suspicious) : '—')
+
+  // S061 — AudioContext state
+  const acs = hw.audioContextState || {}
+  set('raw-audio-ctx-state', acs.supported === false ? 'no soportado' : (acs.initialState || '—'))
+
+  // S139 — WebAuthn
+  const wa = sys.webAuthn || {}
+  set('raw-webauthn', wa.supported != null ? 'supported: ' + wa.supported + ' · credentials: ' + wa.credentialsAvailable : '—')
+
+  // S153-S156 — WebGPU
+  const gpu2 = hw.webgpu || {}
+  set('raw-webgpu', gpu2.supported === false ? 'no soportado' : (gpu2.adapterAvailable ? (gpu2.features?.length || 0) + ' features · ' + Object.keys(gpu2.limits || {}).length + ' limits' : 'sin adaptador'))
+  set('raw-webgpu-vendor', gpu2.vendor || (gpu2.supported ? 'sin info' : '—'))
+
+  // S166 — WebDriver BiDi
+  const bidi = auto.webDriverBiDi || {}
+  set('raw-bidi', bidi.indicators?.length ? bidi.indicators.join(', ') : 'ninguno')
+
+  // S168 — Puppeteer extended
+  const pup = auto.puppeteer || {}
+  set('raw-puppeteer', pup.indicators?.length ? pup.indicators.join(', ') : 'no detectado')
+
+  // S169 — Playwright
+  const pw = auto.playwright || {}
+  set('raw-playwright', pw.indicators?.length ? pw.indicators.join(', ') : 'no detectado')
+
+  // S170 — Selenium Grid
+  const sg = auto.seleniumGrid || {}
+  set('raw-selenium-grid', sg.indicators?.length ? sg.indicators.join(', ') : 'no detectado')
+
+  // ── Iteración 6 — AI Automation ─────────────────────────────────────────
+  const ai = S.aiAutomation || {}
+
+  const ap = ai.patterns || {}
+  set('raw-ai-patterns', ap.flags?.length ? ap.flags.join(', ') : (ap.score != null ? 'score ' + ap.score + ' — ninguna anomalía' : '—'))
+  set('raw-ai-suspicious', ap.suspiciousAI != null ? String(ap.suspiciousAI) : '—')
+
+  const ml = ai.mlFrameworks || {}
+  set('raw-ml-frameworks', ml.count > 0 ? ml.detected.join(', ') : 'ninguno detectado')
+
+  const rnd = ai.randomness || {}
+  set('raw-randomness', rnd.chiSquare != null ? 'χ² ' + rnd.chiSquare + ' · pares sospechosos: ' + (rnd.suspiciousPairs ?? '?') : '—')
+  set('raw-prng-seeded', rnd.possiblySeeded != null ? String(rnd.possiblySeeded) : '—')
+
+  const tp = ai.typingPatterns || {}
+  set('raw-typing', tp.insufficient ? 'insuficiente (< 8 teclas)' : 'pausas: ' + (tp.wordPauses ?? 0) + ' · rápidas: ' + (tp.fastKeys ?? 0) + ' · ratio: ' + (tp.pauseRatio ?? '?'))
+  set('raw-typing-human', tp.humanLikeTyping != null ? String(tp.humanLikeTyping) : '—')
+
+  const rt = ai.responseTime || {}
+  set('raw-response-time', rt.insufficient ? 'insuficiente (< 3 clicks)' : rt.cv != null ? 'CV ' + rt.cv + ' · mean ' + rt.mean + 'ms' : '—')
+  set('raw-rt-consistent', rt.tooConsistent != null ? String(rt.tooConsistent) : '—')
+
+  const dt = ai.decisionTree || {}
+  set('raw-decision-tree', dt.insufficient ? 'insuficiente (< 10 puntos)' : dt.straightnessRatio != null ? 'ratio ' + dt.straightnessRatio : '—')
+  set('raw-dt-straight', dt.suspiciouslyStraight != null ? String(dt.suspiciouslyStraight) : '—')
+
+  // JSON export
+  document.getElementById('json-export').textContent = JSON.stringify(SESSION, null, 2)
+
+  // Intelligence tab signal values
+  set('ic-cores', s.cores ? s.cores + ' (anómalo)' : '—')
+  set('ic-cpuspeed', s.cpuSpeed?.average ? s.cpuSpeed.average.toFixed(2) + 'ms (lento)' : (s.cpuSpeedAvg ? s.cpuSpeedAvg + 'ms' : '—'))
+  set('ic-memory', s.deviceMemory ? s.deviceMemory + 'GB' : '—')
+  set('ic-dpr', s.screen?.devicePixelRatio !== undefined ? s.screen.devicePixelRatio + ' (bajo)' : '—')
+  set('ic-tz', s.timezone !== undefined ? s.timezone + ' → ' + (s.timezone <= -3 ? 'Argentina' : 'LATAM') : '—')
+  set('ic-lang', s.lang || '—')
+  set('ic-gpu-vendor', s.gpuVendor || '—')
+  set('ic-gpu-name', s.gpuName ? s.gpuName.slice(0, 20) + '...' : '—')
+  set('ic-os', s.osVersion || s.os || '—')
+  set('ic-platform', s.os || '—')
+  set('ic-canvas', s.canvasId ? s.canvasId.slice(0, 10) + '... (estable)' : '—')
+  set('ic-ls', s.localStorage ? 'activo' : 'inactivo')
+  set('ic-ss', s.sessionStorage ? 'activo' : 'inactivo')
+  set('ic-idb', s.indexedDB ? 'activo' : 'inactivo')
+  set('ic-cookies', s.cookiesEnabled ? 'activos' : 'inactivos')
+}
+
+applySession(SESSION)
+
+// ── applyInsights — renderizado dinámico desde segundo agente Toqan ──────────
+
+const _AGENT_NAMES = {
+  bot:                'Bot Detection',
+  browserSpoofing:    'Browser Spoofing',
+  emulatorVm:         'Emulator / VM',
+  tor:                'Tor',
+  proxyVpn:           'Proxy / VPN',
+  incognito:          'Incognito',
+  antiFingerprinting: 'Anti-Fingerprinting',
+  deviceSharing:      'Device Sharing',
+  behavioral:         'Behavioral Anomaly',
+  ato:                'Account Takeover',
+  aiAutomation:       'AI Automation'
+}
+
+const _AGENT_ORDER = ['emulatorVm','proxyVpn','browserSpoofing','incognito','bot','antiFingerprinting','tor','aiAutomation','deviceSharing','behavioral','ato']
+
+const _VECTOR_META = {
+  emulatorVm:         { name: 'Emulator / VM',      cat: 'hardware · gpu · cpu'       },
+  proxyVpn:           { name: 'Proxy / VPN',         cat: 'geo · idioma · timezone'    },
+  browserSpoofing:    { name: 'Browser Spoofing',    cat: 'fingerprint · webgl · ua'   },
+  incognito:          { name: 'Incognito',            cat: 'storage · privacidad'       },
+  bot:                { name: 'Bot',                  cat: 'automatización · webdriver' },
+  antiFingerprinting: { name: 'Anti-Fingerprinting', cat: 'canvas · evasión'           },
+  tor:                { name: 'Tor',                  cat: 'exit nodes · RTT'           },
+  aiAutomation:       { name: 'AI Automation',        cat: 'patrones · timing · ml'     },
+  deviceSharing:      { name: 'Device Sharing',       cat: 'historial · sesiones'       },
+  behavioral:         { name: 'Behavioral Anomaly',   cat: 'mouse · teclado · touch'    },
+  ato:                { name: 'Account Takeover',     cat: 'velocity · cuenta'          }
+}
+
+function _agCls(score) {
+  if (score === null || score === undefined) return 'ok'
+  return score >= 60 ? 'risk' : score >= 30 ? 'warn' : 'ok'
+}
+
+function _agBadge(score) {
+  if (score === null || score === undefined) return { cls: 'clear', txt: 'Sin datos · —' }
+  if (score >= 60) return { cls: 'risk', txt: 'Alerta · ' + score }
+  if (score >= 30) return { cls: 'warn', txt: 'Aviso · ' + score }
+  return { cls: 'clear', txt: 'Limpio · ' + score }
+}
+
+function _pillsHtml(meta) {
+  var h = ''
+  if (meta.alertCount > 0)  h += '<span class="pill p-red">'   + meta.alertCount  + ' alerta'  + (meta.alertCount  !== 1 ? 's críticas' : ' crítica')  + '</span>'
+  if (meta.warnCount > 0)   h += '<span class="pill p-amber">' + meta.warnCount   + ' aviso'   + (meta.warnCount   !== 1 ? 's' : '')  + '</span>'
+  if (meta.cleanCount > 0)  h += '<span class="pill p-green">' + meta.cleanCount  + ' limpio'  + (meta.cleanCount  !== 1 ? 's' : '')  + '</span>'
+  if (meta.nodataCount > 0) h += '<span class="pill p-gray">'  + meta.nodataCount + ' sin datos</span>'
+  return h
+}
+
+function _countsText(meta) {
+  return [
+    meta.alertCount  > 0 ? meta.alertCount  + ' alertas'   : null,
+    meta.warnCount   > 0 ? meta.warnCount   + ' avisos'    : null,
+    meta.cleanCount  > 0 ? meta.cleanCount  + ' limpios'   : null,
+    meta.nodataCount > 0 ? meta.nodataCount + ' sin datos' : null
+  ].filter(Boolean).join(' · ')
+}
+
+function _agentGridHtml(agents) {
+  return _AGENT_ORDER.map(function(key) {
+    var a = agents[key]
+    if (!a) return ''
+    var name  = _AGENT_NAMES[key] || key
+    var cls   = _agCls(a.score)
+    var badge = _agBadge(a.score)
+    var tagsHtml    = (a.tags || []).map(function(t){ return '<span class="ag-tag">' + t + '</span>' }).join('')
+    var similarHtml = a.similarPattern
+      ? '<div class="ag-similar">Patrón similar a <span>' + a.similarPattern + '</span></div>' : ''
+    return '<div class="ag ' + cls + '">'
+      + '<div class="ag-top"><div>'
+      + '<div class="ag-meta">' + name.toLowerCase() + ' · ' + (a.category || '') + '</div>'
+      + '<div class="ag-name">' + name + '</div>'
+      + '</div><div class="ag-badge ' + badge.cls + '">' + badge.txt + '</div></div>'
+      + '<div class="ag-insight">' + (a.insight || '') + '</div>'
+      + '<div class="ag-footer">' + tagsHtml + '</div>'
+      + similarHtml
+      + '</div>'
+  }).join('')
+}
+
+function _voteStripHtml(agents) {
+  return _AGENT_ORDER.map(function(key) {
+    var a = agents[key]
+    if (!a) return ''
+    var name      = _AGENT_NAMES[key] || key
+    var cls       = _agCls(a.score)
+    var opacity   = (a.score === null || a.score === undefined) ? ' style="opacity:.5"' : ''
+    var scoreStr  = (a.score !== null && a.score !== undefined) ? a.score : '—'
+    return '<div class="vote-item ' + cls + '"' + opacity + '><div class="vote-dot"></div>' + name + ' · ' + scoreStr + '</div>'
+  }).join('')
+}
+
+function _compBarsHtml(vectors) {
+  return _AGENT_ORDER.map(function(key) {
+    var v = vectors[key]
+    if (!v) return ''
+    var name = (_VECTOR_META[key] || {}).name || key
+    if (v.score === null || v.score === undefined) {
+      return '<div class="comp-row" style="opacity:.4"><span class="comp-lbl">' + name + '</span>'
+        + '<div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div>'
+        + '<span class="comp-val" style="color:var(--t4)">—</span></div>'
+    }
+    var color      = v.score >= 60 ? 'var(--r600)' : v.score >= 30 ? 'var(--a600)' : 'var(--g600)'
+    var scoreColor = v.score >= 30 ? color : 'var(--t3)'
+    return '<div class="comp-row"><span class="comp-lbl">' + name + '</span>'
+      + '<div class="comp-bar-bg"><div class="comp-bar" style="width:' + v.score + '%;background:' + color + '"></div></div>'
+      + '<span class="comp-val" style="color:' + scoreColor + '">' + v.score + '</span></div>'
+  }).join('')
+}
+
+function _summaryHtml(meta) {
+  return '<div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Vectores activos</span><span style="font-weight:600;color:var(--r600)">' + (meta.alertCount || 0) + ' críticos · ' + (meta.warnCount || 0) + ' avisos</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Limpios</span><span style="font-weight:600;color:var(--g700)">' + (meta.cleanCount || 0) + '</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Sin datos</span><span style="font-weight:600;color:var(--t3)">' + (meta.nodataCount || 0) + '</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Señales analizadas</span><span style="font-weight:600">122</span></div>'
+}
+
+function _vectorTableHtml(vectors) {
+  var STATUS_PILL = {
+    critical: '<span class="pill p-red">Crítico</span>',
+    alert:    '<span class="pill p-amber">Alerta</span>',
+    warn:     '<span class="pill p-amber">Aviso</span>',
+    clean:    '<span class="pill p-green">Limpio</span>',
+    nodata:   '<span class="pill p-roadmap">Sin datos</span>'
+  }
+  return _AGENT_ORDER.map(function(key) {
+    var v = vectors[key]
+    if (!v) return ''
+    var vm       = _VECTOR_META[key] || { name: key, cat: '' }
+    var isNodata = v.score === null || v.score === undefined
+    var dotColor = isNodata ? 'var(--p200)' : v.score >= 60 ? 'var(--r600)' : v.score >= 30 ? 'var(--a600)' : 'var(--g600)'
+    var barColor = dotColor
+    var scoreColor = isNodata ? 'var(--t4)' : v.score >= 60 ? 'var(--r600)' : v.score >= 30 ? 'var(--a600)' : 'var(--t3)'
+    var barWidth   = isNodata ? 0 : v.score
+    var scoreDisp  = isNodata ? '—' : v.score
+    var weightDisp = v.weight != null ? (v.weight * 100).toFixed(0) + '%' : '—'
+    var sigsHtml   = (v.triggerSignals || []).map(function(s){ return '<span class="vt-sig">' + s.replace(/_/g,' ') + '</span>' }).join('')
+    var pill       = STATUS_PILL[v.status] || '<span class="pill p-gray">—</span>'
+    var rowClass   = isNodata ? 'vt-row roadmap' : 'vt-row'
+    return '<div class="' + rowClass + '">'
+      + '<div class="vt-dot" style="background:' + dotColor + '"></div>'
+      + '<div class="vt-name">' + vm.name + '<small>' + vm.cat + '</small></div>'
+      + '<div class="vt-signals">' + sigsHtml + '</div>'
+      + '<div><div class="vt-bar-bg"><div class="vt-bar" style="width:' + barWidth + '%;background:' + barColor + '"></div></div>'
+      + '<div class="vt-score" style="color:' + scoreColor + '">' + scoreDisp + '</div></div>'
+      + '<div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">' + weightDisp + '</div>'
+      + '<div class="vt-status">' + pill + '</div>'
+      + '</div>'
+  }).join('')
+}
+
+function applyInsights(data) {
+  if (!data || !data.meta) return
+  var meta    = data.meta
+  var agents  = data.agents  || {}
+  var vectors = data.vectors || {}
+  var orc     = data.orchestrator || {}
+
+  // Session strip headline
+  var sshl = document.getElementById('sess-headline')
+  if (sshl) {
+    var n = Object.keys(agents).length || 11
+    sshl.textContent = n + ' agentes analizaron este device en paralelo · ' + (meta.analysisTimeMs || '—') + 'ms'
+  }
+
+  // Verdict chip (sess strip)
+  var vcScore = document.getElementById('vc-score')
+  if (vcScore) vcScore.textContent = meta.overallScore
+  var vcLabel = document.getElementById('vc-label')
+  if (vcLabel) vcLabel.textContent = meta.verdictLabel || ''
+
+  // Hero decision
+  var heroScore = document.getElementById('hero-score')
+  if (heroScore) heroScore.textContent = meta.overallScore
+  var heroVerdict = document.getElementById('hero-verdict-label')
+  if (heroVerdict) heroVerdict.textContent = meta.verdictLabel || ''
+  var heroDesc = document.getElementById('hero-desc')
+  if (heroDesc) heroDesc.textContent = orc.insight || ''
+  var heroPills = document.getElementById('hero-pills')
+  if (heroPills) heroPills.innerHTML = _pillsHtml(meta)
+
+  // Topbar risk badge
+  var tbRiskLabel = document.getElementById('tb-risk-label')
+  var tbRiskMap = { block: 'Riesgo crítico', review: 'Riesgo alto', monitor: 'Riesgo medio', allow: 'Perfil limpio' }
+  if (tbRiskLabel) tbRiskLabel.textContent = tbRiskMap[meta.verdict] || tbRiskLabel.textContent
+  var tbRiskEl = document.querySelector('.tb-risk')
+  if (tbRiskEl && meta.verdict === 'allow') {
+    tbRiskEl.style.cssText = 'display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.62rem;font-weight:600;background:var(--g50);border:1px solid var(--g100);color:var(--g700)'
+    var tbDot = tbRiskEl.querySelector('.tb-dot')
+    if (tbDot) tbDot.style.background = 'var(--brand)'
+  } else if (tbRiskEl && meta.verdict === 'monitor') {
+    tbRiskEl.style.cssText = 'display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.62rem;font-weight:600;background:var(--a50);border:1px solid var(--a100);color:var(--amber)'
+    var tbDot2 = tbRiskEl.querySelector('.tb-dot')
+    if (tbDot2) tbDot2.style.background = 'var(--a600)'
+  }
+
+  // Tab badge (alert count)
+  var tabBadge = document.querySelector('.tab-badge')
+  if (tabBadge) tabBadge.textContent = meta.alertCount || 0
+
+  // Agent grid
+  var agentGrid = document.getElementById('insights-agent-grid')
+  if (agentGrid) agentGrid.innerHTML = _agentGridHtml(agents)
+
+  // Vote strip
+  var voteStrip = document.getElementById('insights-vote-strip')
+  if (voteStrip) voteStrip.innerHTML = _voteStripHtml(agents)
+  var voteLbl = document.getElementById('vote-strip-lbl')
+  if (voteLbl) voteLbl.textContent = 'Votos de los ' + Object.keys(agents).length + ' agentes'
+
+  // Orchestrator
+  var orcTitle = document.getElementById('orc-title')
+  if (orcTitle) orcTitle.textContent = orc.title || ''
+  var orcInsight = document.getElementById('orc-insight')
+  if (orcInsight) orcInsight.textContent = orc.insight || ''
+  var orcScore = document.getElementById('orc-score')
+  if (orcScore) orcScore.textContent = meta.overallScore
+  var orcTagScore = document.getElementById('orc-tag-score')
+  if (orcTagScore) orcTagScore.textContent = 'score: ' + meta.overallScore + ' / 100'
+  var orcFooter = document.getElementById('orc-footer')
+  if (orcFooter) {
+    var verdictTag = { block: 'bloquear', review: 'revisar manualmente', monitor: 'monitorear', allow: 'aprobar' }
+    orcFooter.innerHTML = '<span class="orc-tag">' + _countsText(meta) + '</span>'
+      + '<span class="orc-tag">score: ' + meta.overallScore + ' / 100</span>'
+      + '<span class="orc-tag">' + (verdictTag[meta.verdict] || meta.verdict || '') + '</span>'
+  }
+  var orcEco = document.getElementById('orc-ecosystem')
+  if (orcEco) orcEco.innerHTML = orc.ecosystemSignal || ''
+
+  // Vectors — ring
+  var score      = meta.overallScore
+  var ringColor  = score >= 75 ? 'var(--r600)' : score >= 50 ? 'var(--a600)' : score >= 25 ? 'var(--p600)' : 'var(--brand)'
+  var ringOffset = (289 - (289 * score / 100)).toFixed(1)
+  var ringArc = document.getElementById('ring-arc')
+  if (ringArc) { ringArc.setAttribute('stroke', ringColor); ringArc.setAttribute('stroke-dashoffset', ringOffset) }
+  var ringNum = document.getElementById('ring-num')
+  if (ringNum) { ringNum.textContent = score; ringNum.style.color = ringColor }
+  var ringLbl = document.getElementById('ring-lbl')
+  if (ringLbl) ringLbl.textContent = meta.verdictLabel || ''
+
+  // Vectors — composition bars
+  var vComp = document.getElementById('vectors-comp')
+  if (vComp) vComp.innerHTML = _compBarsHtml(vectors)
+
+  // Vectors — summary
+  var vSummary = document.getElementById('vectors-summary')
+  if (vSummary) vSummary.innerHTML = _summaryHtml(meta)
+
+  // Vectors — table rows
+  var vtable = document.getElementById('vtable')
+  if (vtable) {
+    var vhead = vtable.querySelector('.vt-head').cloneNode(true)
+    vtable.innerHTML = ''
+    vtable.appendChild(vhead)
+    vtable.insertAdjacentHTML('beforeend', _vectorTableHtml(vectors))
+  }
+}
+
+if (insightsData) applyInsights(insightsData)
+
+// ── Intelligence tab — rendering dinámico ────────────────────────────────────
+let _activeFilter = 'all'
+
+function buildFindingCard(f) {
+  const badgeClass = f.status === 'anomaly' ? 'anomaly' : f.status === 'warn' ? 'warn' : 'ok'
+  const badgeText  = f.status === 'anomaly' ? 'Anomalía' : f.status === 'warn' ? 'Aviso' : 'OK'
+
+  const sigsHtml = (f.signals || []).map(sig => {
+    const valClass = sig.status === 'bad' ? 'anomaly' : sig.status === 'warn' ? 'warn' : 'ok'
+    return `<div class="ic-sig-row">
+      <span class="ic-sig-key">${sig.key}</span>
+      <span class="ic-sig-val ${valClass}">${sig.value}</span>
+    </div>`
+  }).join('')
+
+  return `<div class="intel-card" data-id="${f.id}" data-status="${f.status}" data-vector="${(f.vector||'').toLowerCase()}">
+    <div class="ic-head">
+      <div class="ic-badge ${badgeClass}">${badgeText}</div>
+      <div class="ic-title">${f.title}</div>
+      <div class="ic-vector">${f.vector || ''}</div>
+    </div>
+    <div class="ic-body">
+      <div class="ic-rule">${f.condition || ''}</div>
+      <div class="ic-signals">${sigsHtml}</div>
+      <div class="ic-conclusion">${f.conclusion || ''}</div>
+    </div>
+  </div>`
+}
+
+function renderIntelligence(allFindings, filter) {
+  filter = filter || _activeFilter
+  const container = document.getElementById('intel-dynamic')
+  const counter   = document.getElementById('if-count')
+  const secSoon   = document.getElementById('sec-soon')
+
+  // Aplicar filtro
+  let visible = allFindings
+  if (filter === 'anomaly') {
+    visible = allFindings.filter(f => f.status === 'anomaly' || f.status === 'warn')
+  } else if (filter === 'ok') {
+    visible = allFindings.filter(f => f.status === 'ok')
+  } else if (filter !== 'all') {
+    // filtro por vector (bot, emulator, proxy, spoof)
+    const keywords = {
+      bot: 'bot',
+      emulator: 'emulator',
+      proxy: 'proxy',
+      spoof: 'spoof'
+    }
+    const kw = keywords[filter] || filter
+    visible = allFindings.filter(f => (f.vector || '').toLowerCase().includes(kw))
+  }
+
+  counter.textContent = visible.length + ' hallazgo' + (visible.length !== 1 ? 's' : '')
+
+  if (allFindings.length === 0) {
+    container.innerHTML = `<div class="intel-card" style="margin-bottom:20px">
+      <div class="ic-body" style="padding:20px;text-align:center;color:var(--t3);font-size:.78rem">
+        Analizando este device por primera vez — sin historial previo
+      </div>
+    </div>`
+    if (secSoon) secSoon.style.marginTop = '0'
+    return
+  }
+
+  const bad  = visible.filter(f => f.status !== 'ok')
+  const good = visible.filter(f => f.status === 'ok')
+
+  let html = ''
+
+  if (bad.length > 0) {
+    html += `<div class="sec">Qué está mal</div>
+    <div class="intel-grid" style="margin-bottom:20px">${bad.map(buildFindingCard).join('')}</div>`
+  }
+
+  if (good.length > 0) {
+    html += `<div class="sec">Confirmado limpio</div>
+    <div class="intel-grid" style="margin-bottom:20px">${good.map(buildFindingCard).join('')}</div>`
+  }
+
+  if (visible.length === 0) {
+    html = `<div class="intel-card" style="margin-bottom:20px">
+      <div class="ic-body" style="padding:20px;text-align:center;color:var(--t3);font-size:.78rem">
+        Sin hallazgos para este filtro
+      </div>
+    </div>`
+  }
+
+  container.innerHTML = html
+}
+
+function filterIntel(type, btn) {
+  _activeFilter = type
+  document.querySelectorAll('.if-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  renderIntelligence(findings, type)
+}
+
+renderIntelligence(findings)
+
+// ── Copy JSON ─────────────────────────────────────────────────────────────────
+function copyJSON() {
+  const btn = document.getElementById('btn-copy-json')
+  navigator.clipboard.writeText(JSON.stringify(SESSION, null, 2)).then(() => {
+    btn.textContent = 'Copiado'
+    setTimeout(() => { btn.textContent = 'Copiar JSON' }, 2000)
+  })
+}
+
+// ── Tab navigation ────────────────────────────────────────────────────────────
+function go(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'))
+  el.classList.add('active')
+  document.getElementById('pane-' + id).classList.add('active')
+}
+</script>
+</body>
+</html>

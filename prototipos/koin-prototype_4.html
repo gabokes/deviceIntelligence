@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koin · Browser Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F4F7;--surface:#fff;--s2:#F8F9FB;--s3:#F2F4F7;
+  --border:#E4E7EC;--border-s:#D0D5DD;
+  --t1:#101828;--t2:#475467;--t3:#98A2B3;--t4:#D0D5DD;
+  --g50:#F6FEF9;--g100:#DCFAE6;--g600:#079455;--g700:#067647;
+  --a50:#FFFAEB;--a100:#FEF0C7;--a600:#DC6803;--amber:#B54708;
+  --r50:#FEF3F2;--r100:#FEE4E2;--r600:#D92D20;
+  --b50:#EFF8FF;--b100:#D1E9FF;--b600:#1570EF;
+  --p50:#F4F3FF;--p100:#EBE9FE;--p200:#C9C5F7;--p600:#6938EF;--p700:#5925DC;--p800:#3C3489;--p900:#26215C;
+  --brand:#17B26A;
+  --mono:'DM Mono',monospace;--sans:'Geist',sans-serif;
+}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100vh;display:flex;flex-direction:column}
+svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* TOPBAR */
+.topbar{height:52px;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px}
+.tb-logo{width:26px;height:26px;background:var(--t1);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.tb-logo svg{width:13px;height:13px;stroke:#fff}
+.tb-name{font-size:.85rem;font-weight:700;letter-spacing:-.02em}
+.tb-div{width:1px;height:16px;background:var(--border)}
+.tb-crumb{font-family:var(--mono);font-size:.64rem;color:var(--t3)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-risk{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.62rem;font-weight:600;background:var(--r50);border:1px solid var(--r100);color:var(--r600)}
+.tb-dot{width:5px;height:5px;border-radius:50%;background:var(--r600);animation:blink 1.4s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-time{font-family:var(--mono);font-size:.62rem;color:var(--t3)}
+
+/* SESSION STRIP */
+.sess{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px}
+.sess-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sess-left{}
+.sess-meta{font-family:var(--mono);font-size:.62rem;color:var(--t3);margin-bottom:3px}
+.sess-headline{font-size:.95rem;font-weight:600;letter-spacing:-.02em}
+.sess-right{display:flex;align-items:center;gap:10px}
+.verdict-chip{display:flex;align-items:center;gap:12px;background:var(--r50);border:1px solid var(--r100);border-radius:10px;padding:10px 16px}
+.vc-label{font-size:.7rem;font-weight:600;color:var(--r600)}
+.vc-sub{font-size:.62rem;color:var(--t3);margin-top:1px}
+.vc-score{font-size:2rem;font-weight:700;letter-spacing:-.05em;color:var(--r600);line-height:1}
+
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px}
+.tabs-inner{max-width:1280px;margin:0 auto;display:flex}
+.tab{display:flex;align-items:center;gap:6px;padding:10px 14px;font-size:.78rem;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:color .12s,border-color .12s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--t1)}
+.tab.active{color:var(--t1);font-weight:600;border-bottom-color:var(--brand)}
+.tab svg{width:13px;height:13px;flex-shrink:0}
+.tab-badge{font-size:.52rem;font-weight:700;padding:1px 5px;border-radius:5px;background:var(--r100);color:var(--r600);margin-left:2px}
+
+/* BODY */
+.body{flex:1;padding:20px 24px 60px}
+.body-inner{max-width:1280px;margin:0 auto}
+.pane{display:none}.pane.active{display:block}
+
+/* UTILS */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:.57rem;font-weight:600;border:1px solid;white-space:nowrap;font-family:var(--mono)}
+.p-green{background:var(--g50);color:var(--g700);border-color:var(--g100)}
+.p-amber{background:var(--a50);color:var(--amber);border-color:var(--a100)}
+.p-red{background:var(--r50);color:var(--r600);border-color:var(--r100)}
+.p-purple{background:var(--p50);color:var(--p700);border-color:var(--p100)}
+.p-blue{background:var(--b50);color:var(--b600);border-color:var(--b100)}
+.p-gray{background:var(--s3);color:var(--t2);border-color:var(--border)}
+.p-new{background:#EFF8FF;color:#175CD3;border-color:#B5D4F4}
+.p-roadmap{background:var(--p50);color:var(--p700);border-color:var(--p100)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.lbl{font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--t3)}
+.sec{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:2px}
+
+/* ══════════════════════════════════════
+   TAB 1 · INSIGHTS
+══════════════════════════════════════ */
+
+/* parallel header */
+.parallel-hd{margin-bottom:16px}
+.parallel-hd p{font-size:.72rem;color:var(--t3);font-weight:500;margin-bottom:4px}
+.parallel-hd h2{font-size:1rem;font-weight:600;letter-spacing:-.02em}
+
+/* Agent card */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px}
+.ag{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:box-shadow .12s}
+.ag:hover{box-shadow:0 2px 8px rgba(16,24,40,.07)}
+.ag::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ag.ok::before{background:var(--brand)}
+.ag.warn::before{background:var(--a600)}
+.ag.risk::before{background:var(--r600)}
+.ag-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ag-meta{font-family:var(--mono);font-size:.57rem;color:var(--t3);margin-bottom:2px}
+.ag-name{font-size:.84rem;font-weight:600;letter-spacing:-.01em}
+.ag-badge{font-size:.58rem;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;flex-shrink:0;font-family:var(--mono)}
+.ag-badge.ok{background:var(--g100);color:var(--g700)}
+.ag-badge.warn{background:var(--a100);color:var(--amber)}
+.ag-badge.risk{background:var(--r100);color:var(--r600)}
+.ag-badge.clear{background:var(--g50);color:var(--g600);border:1px solid var(--g100)}
+.ag-insight{font-size:.73rem;color:var(--t1);line-height:1.65;border-left:2px solid var(--p200);padding-left:10px;margin-bottom:10px;font-style:italic}
+.ag-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ag-tag{font-size:.57rem;background:var(--s3);color:var(--t2);border:1px solid var(--border);padding:2px 7px;border-radius:5px;font-family:var(--mono)}
+.ag-similar{font-size:.62rem;color:var(--t3);font-family:var(--mono);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.ag-similar span{color:var(--p700);font-weight:500}
+
+/* Orchestrator */
+.orchestrator{background:#EEEDFE;border:0.5px solid var(--p200);border-radius:12px;padding:20px 22px;margin-top:4px}
+.orc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.orc-eyebrow{font-size:.62rem;color:var(--p700);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.orc-title{font-size:1rem;font-weight:600;color:var(--p900);letter-spacing:-.02em}
+.orc-score-wrap{text-align:right;flex-shrink:0}
+.orc-score{font-size:3rem;font-weight:700;letter-spacing:-.05em;color:var(--p900);line-height:1}
+.orc-score-sub{font-size:.6rem;color:var(--p700);margin-top:2px}
+.orc-insight{font-size:.76rem;color:var(--p800);line-height:1.65;border-left:2px solid #7F77DD;padding-left:12px;margin-bottom:14px;font-style:italic}
+.orc-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.orc-tag{font-size:.64rem;background:#CECBF6;color:var(--p900);padding:3px 9px;border-radius:6px;font-weight:500}
+.orc-ecosystem{margin-top:14px;padding-top:14px;border-top:0.5px solid var(--p200);font-size:.7rem;color:var(--p800);line-height:1.6}
+.orc-ecosystem strong{color:var(--p900)}
+
+/* Vote strip */
+.vote-strip{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.vote-item{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:.62rem;font-weight:500;border:1px solid}
+.vote-item.risk{background:var(--r50);border-color:var(--r100);color:var(--r600)}
+.vote-item.warn{background:var(--a50);border-color:var(--a100);color:var(--amber)}
+.vote-item.ok{background:var(--g50);border-color:var(--g100);color:var(--g700)}
+.vote-dot{width:5px;height:5px;border-radius:50%}
+.vote-item.risk .vote-dot{background:var(--r600)}
+.vote-item.warn .vote-dot{background:var(--a600)}
+.vote-item.ok .vote-dot{background:var(--brand)}
+
+/* ══════════════════════════════════════
+   TAB 2 · VECTORS
+══════════════════════════════════════ */
+.vectors-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.vectors-layout{grid-template-columns:1fr}}
+
+/* Score ring */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ring-svg{position:relative;width:110px;height:110px}
+.ring-svg svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;letter-spacing:-.04em}
+.ring-lbl{font-size:.62rem;color:var(--t3);text-align:center}
+
+/* Comp bars */
+.comp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.comp-lbl{font-size:.66rem;color:var(--t2);flex:0 0 150px}
+.comp-bar-bg{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.comp-bar{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);width:0}
+.comp-val{font-family:var(--mono);font-size:.62rem;width:28px;text-align:right}
+
+/* Vector table */
+.vtable{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.vt-head{display:grid;grid-template-columns:24px 1fr 180px 120px 80px 90px;gap:10px;padding:8px 14px;background:var(--s2);border-bottom:1px solid var(--border)}
+.vt-hcell{font-size:.57rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3)}
+.vt-row{display:grid;grid-template-columns:24px 1fr 180px 120px 80px 90px;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+.vt-row:last-child{border-bottom:none}
+.vt-row:hover{background:var(--s2)}
+.vt-row.roadmap{opacity:.45}
+.vt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.vt-name{font-size:.76rem;font-weight:600}
+.vt-name small{display:block;font-size:.58rem;font-weight:400;color:var(--t3);font-family:var(--mono);margin-top:1px}
+.vt-signals{display:flex;flex-wrap:wrap;gap:3px}
+.vt-sig{font-size:.54rem;background:var(--s3);color:var(--t2);border:1px solid var(--border);padding:1px 5px;border-radius:4px;font-family:var(--mono)}
+.vt-bar-bg{height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.vt-bar{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);width:0}
+.vt-score{font-family:var(--mono);font-size:.74rem;font-weight:500;text-align:right}
+.vt-status{text-align:right}
+
+/* ══════════════════════════════════════
+   TAB 3 · INTELLIGENCE
+══════════════════════════════════════ */
+.intel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.intel-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ic-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.ic-badge{font-size:.56rem;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;text-transform:uppercase;letter-spacing:.05em}
+.ic-badge.anomaly{background:var(--r100);color:var(--r600)}
+.ic-badge.warn{background:var(--a100);color:var(--amber)}
+.ic-badge.ok{background:var(--g100);color:var(--g700)}
+.ic-title{font-size:.78rem;font-weight:600;flex:1}
+.ic-vector{font-size:.57rem;font-family:var(--mono);color:var(--t3);background:var(--s3);border:1px solid var(--border);padding:1px 6px;border-radius:4px;flex-shrink:0}
+.ic-body{padding:12px 14px}
+.ic-rule{font-family:var(--mono);font-size:.62rem;color:var(--b600);background:var(--b50);border:1px solid var(--b100);border-radius:5px;padding:6px 10px;margin-bottom:10px;line-height:1.6}
+.ic-signals{display:flex;flex-direction:column;gap:5px}
+.ic-sig-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--s2);border-radius:5px}
+.ic-sig-key{font-family:var(--mono);font-size:.58rem;color:var(--t3)}
+.ic-sig-val{font-family:var(--mono);font-size:.62rem;font-weight:500}
+.ic-sig-val.anomaly{color:var(--r600)}
+.ic-sig-val.warn{color:var(--a600)}
+.ic-sig-val.ok{color:var(--g700)}
+.ic-conclusion{margin-top:10px;font-size:.7rem;color:var(--t2);line-height:1.6;border-left:2px solid var(--border-s);padding-left:8px}
+
+/* ══════════════════════════════════════
+   TAB 4 · SIGNALS RAW
+══════════════════════════════════════ */
+.sig-legend{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sig-legend span{font-size:.68rem;color:var(--t3)}
+
+.sig-section{margin-bottom:24px}
+.sig-sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ssh-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ssh-icon svg{width:13px;height:13px}
+.ssh-title{font-size:.86rem;font-weight:600;flex:1}
+.ssh-count{font-size:.58rem;color:var(--t3);font-family:var(--mono);background:var(--s3);border:1px solid var(--border);padding:2px 7px;border-radius:8px}
+
+.sig-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px;position:relative;overflow:hidden;transition:border-color .12s}
+.sc:hover{border-color:var(--border-s)}
+.sc.risk{border-color:#FECDCA}.sc.risk::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--r600)}
+.sc.warn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--a600)}
+.sc.ok::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--brand)}
+.sc-status{position:absolute;top:8px;right:8px;font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em}
+.sc-status.new{background:var(--b100);color:var(--b600)}
+.sc-status.roadmap{background:var(--p100);color:var(--p700)}
+.sc-key{font-family:var(--mono);font-size:.56rem;color:var(--t3);margin-bottom:5px;padding-right:48px}
+.sc-val{font-size:1.05rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:2px;word-break:break-word}
+.sc-val.md{font-size:.88rem;font-weight:600}
+.sc-val.sm{font-size:.7rem;font-weight:500;font-family:var(--mono);line-height:1.5}
+.sc-desc{font-size:.62rem;color:var(--t3);line-height:1.4;margin-top:3px}
+.sc-desc.risk{color:var(--r600)}
+.sc-desc.warn{color:var(--a600)}
+.sc-div{height:1px;background:var(--border);margin:7px 0}
+.sc-row{display:flex;justify-content:space-between;align-items:center;padding:1px 0}
+.sc-rk{font-family:var(--mono);font-size:.54rem;color:var(--t3)}
+.sc-rv{font-family:var(--mono);font-size:.58rem;color:var(--t2);font-weight:500}
+.sc-rv.risk{color:var(--r600)}.sc-rv.warn{color:var(--a600)}.sc-rv.ok{color:var(--g700)}
+.sc.roadmap{opacity:.45;filter:grayscale(.3)}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-logo">
+    <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><path d="M9 11.5h6M12 9v5"/></svg>
+  </div>
+  <span class="tb-name">Koin</span>
+  <div class="tb-div"></div>
+  <span class="tb-crumb">Browser Intelligence · session e62833c2cf</span>
+  <div class="tb-right">
+    <span class="tb-time">15 abr 2025 · 14:23 UTC</span>
+    <div class="tb-risk"><div class="tb-dot"></div>Riesgo alto</div>
+  </div>
+</div>
+
+<!-- SESSION STRIP -->
+<div class="sess">
+  <div class="sess-inner">
+    <div class="sess-left">
+      <div class="sess-meta">Windows 10 · Chrome 124 · timezone -3 (ARG) · lang es-ES · device 2d3fda04d8</div>
+      <div class="sess-headline">10 agentes analizaron este device en paralelo · 187ms</div>
+    </div>
+    <div class="sess-right">
+      <div class="verdict-chip">
+        <div>
+          <div class="vc-label">Riesgo alto · revisar</div>
+          <div class="vc-sub">Orquestador · consenso 10 agentes</div>
+        </div>
+        <div class="vc-score">78</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tabs-inner">
+    <div class="tab active" onclick="go('insights',this)">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      Insights
+      <span class="tab-badge">3</span>
+    </div>
+    <div class="tab" onclick="go('vectors',this)">
+      <svg viewBox="0 0 16 16"><path d="M2 13L5 7l3 3 3-4 3 4"/></svg>
+      Vectores
+    </div>
+    <div class="tab" onclick="go('intel',this)">
+      <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 2 10 2-5h3"/></svg>
+      Intelligence
+    </div>
+    <div class="tab" onclick="go('raw',this)">
+      <svg viewBox="0 0 16 16"><path d="M5 3H3a1 1 0 0 0-1 1v2M5 13H3a1 1 0 0 1-1-1v-2M11 3h2a1 1 0 0 1 1 1v2M11 13h2a1 1 0 0 0 1-1v-2"/></svg>
+      Señales raw
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+<div class="body-inner">
+
+<!-- ═══════════════════════════════ INSIGHTS ═══════════════════════════════ -->
+<div class="pane active" id="pane-insights">
+
+  <div class="parallel-hd">
+    <p>Razonamiento multi-agente · en paralelo</p>
+    <h2>10 agentes especializados analizaron este device. Cada uno es experto en su vector.</h2>
+  </div>
+
+  <!-- HERO DECISION -->
+  <div style="background:var(--r50);border:1px solid var(--r100);border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      <div style="font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--r600);margin-bottom:4px">Decisión recomendada · Agente Orquestador</div>
+      <div style="font-size:1.05rem;font-weight:600;color:var(--r600);letter-spacing:-.02em;margin-bottom:8px">Revisar antes de aprobar</div>
+      <div style="font-size:.78rem;color:var(--t2);line-height:1.65;margin-bottom:12px">Este device opera desde un entorno virtualizado detrás de una VPN. Tres agentes coinciden en señales críticas. El patrón es parte de una campaña activa en el ecosistema.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="pill p-red">3 alertas críticas</span>
+        <span class="pill p-amber">1 aviso</span>
+        <span class="pill p-green">3 limpios</span>
+        <span class="pill p-gray">3 sin datos</span>
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-size:3.2rem;font-weight:700;letter-spacing:-.05em;color:var(--r600);line-height:1">78</div>
+      <div style="font-size:.62rem;color:var(--t3);margin-top:2px">score de riesgo</div>
+    </div>
+  </div>
+
+  <div class="agent-grid">
+
+    <!-- Bot Detection -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · automatización</div>
+          <div class="ag-name">Bot Detection</div>
+        </div>
+        <div class="ag-badge clear">Limpio · 12</div>
+      </div>
+      <div class="ag-insight">navigator.webdriver está en false y no detecto flags de automatización. El perfil de JS execution es consistente con un browser real operado por humano.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">webdriver=false</span>
+        <span class="ag-tag">sin puppeteer</span>
+        <span class="ag-tag">sin selenium</span>
+      </div>
+    </div>
+
+    <!-- Browser Spoofing -->
+    <div class="ag risk">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · integridad del browser</div>
+          <div class="ag-name">Browser Spoofing</div>
+        </div>
+        <div class="ag-badge risk">Alerta · 61</div>
+      </div>
+      <div class="ag-insight">El GPU vendor reportado es "Google Inc. (ANGLE)". Ese renderer aparece en el 94% de los headless browsers y emuladores que procesamos. El UA dice Windows/Chrome pero el contexto WebGL no coincide.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">ANGLE renderer</span>
+        <span class="ag-tag">WebGL inconsistente</span>
+        <span class="ag-tag">UA mismatch</span>
+      </div>
+      <div class="ag-similar">Patrón similar a <span>clúster VM-Chrome detectado en 312 devices esta semana</span></div>
+    </div>
+
+    <!-- Emulator / VM -->
+    <div class="ag risk">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · hardware</div>
+          <div class="ag-name">Emulator / VM</div>
+        </div>
+        <div class="ag-badge risk">Alerta · 82</div>
+      </div>
+      <div class="ag-insight">14 cores con cpuSpeed de 36ms promedio es físicamente inconsistente. Hardware real con ese core count produce benchmarks 3-4× más rápidos. Sumado al ANGLE GPU, el perfil es de VM con recursos asignados artificialmente.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">cores/speed anómalo</span>
+        <span class="ag-tag">GPU virtualizada</span>
+        <span class="ag-tag">pixelRatio=1</span>
+      </div>
+      <div class="ag-similar">Patrón similar a <span>847 devices bloqueados en el ecosistema en 24h</span></div>
+    </div>
+
+    <!-- Tor -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · anonimización</div>
+          <div class="ag-name">Tor</div>
+        </div>
+        <div class="ag-badge clear">Limpio · 5</div>
+      </div>
+      <div class="ag-insight">Sin señales de exit nodes ni RTT anómalo desde el browser. La detección completa requiere WebRTC y enriquecimiento server-side de IP, que están en roadmap.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">sin exit node signals</span>
+        <span class="ag-tag">RTT normal</span>
+        <span class="ag-tag">WebRTC pendiente</span>
+      </div>
+    </div>
+
+    <!-- Proxy / VPN -->
+    <div class="ag risk">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · geolocalización</div>
+          <div class="ag-name">Proxy / VPN</div>
+        </div>
+        <div class="ag-badge risk">Alerta · 74</div>
+      </div>
+      <div class="ag-insight">Timezone -3 corresponde a Argentina. El idioma configurado es es-ES (España). Esa combinación aparece en el 89% de las sesiones donde confirmamos VPN activa. En nuestra red, este par tiene tasa de fraude 4.2× el baseline.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">TZ=ARG · lang=ESP</span>
+        <span class="ag-tag">fraude 4.2× baseline</span>
+        <span class="ag-tag">patrón conocido</span>
+      </div>
+      <div class="ag-similar">Patrón similar a <span>clúster VPN-LATAM activo en 12 merchants esta semana</span></div>
+    </div>
+
+    <!-- Incognito -->
+    <div class="ag warn">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · privacidad</div>
+          <div class="ag-name">Incognito</div>
+        </div>
+        <div class="ag-badge warn">Aviso · 34</div>
+      </div>
+      <div class="ag-insight">privateBrowsing=false directo, pero el storage quota API —que es el método más confiable— no está implementado aún. Con el contexto de VM probable, no descarto modo incógnito no detectado.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">flag=false</span>
+        <span class="ag-tag">quota API pendiente</span>
+        <span class="ag-tag">inconcluso</span>
+      </div>
+    </div>
+
+    <!-- Anti-Fingerprinting -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · evasión</div>
+          <div class="ag-name">Anti-Fingerprinting</div>
+        </div>
+        <div class="ag-badge clear">Limpio · 8</div>
+      </div>
+      <div class="ag-insight">El canvasId es estable entre cargas y no detecté técnicas de canvas noise o spoofing. Sin señales de extensiones tipo uBlock o Privacy Badger que modifiquen el fingerprint. Esto es positivo, aunque el audio fingerprint aún no está implementado.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">canvas estable</span>
+        <span class="ag-tag">sin canvas noise</span>
+        <span class="ag-tag">audio pendiente</span>
+      </div>
+    </div>
+
+    <!-- Device Sharing -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · identidad</div>
+          <div class="ag-name">Device Sharing</div>
+        </div>
+        <div class="ag-badge clear">Sin datos · —</div>
+      </div>
+      <div class="ag-insight">Necesito historial de sesiones para detectar múltiples usuarios en el mismo device. El device ID existe pero es la primera sesión registrada. Volvé a consultarme cuando acumule 3+ sesiones.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">primera sesión</span>
+        <span class="ag-tag">requiere historial</span>
+      </div>
+    </div>
+
+    <!-- Behavioral Anomaly -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · comportamiento</div>
+          <div class="ag-name">Behavioral Anomaly</div>
+        </div>
+        <div class="ag-badge clear">Sin datos · —</div>
+      </div>
+      <div class="ag-insight">Las señales de mouse, teclado y touch no están siendo capturadas aún. Sin esos datos no puedo distinguir humano de bot a nivel comportamental. Es el siguiente bloque crítico a implementar.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">mouse pendiente</span>
+        <span class="ag-tag">keyboard pendiente</span>
+        <span class="ag-tag">touch pendiente</span>
+      </div>
+    </div>
+
+    <!-- Account Takeover -->
+    <div class="ag ok">
+      <div class="ag-top">
+        <div>
+          <div class="ag-meta">Agente · cuenta</div>
+          <div class="ag-name">Account Takeover</div>
+        </div>
+        <div class="ag-badge clear">Sin datos · —</div>
+      </div>
+      <div class="ag-insight">Para detectar ATO necesito cruzar el device con la cuenta del usuario: velocidad de cambios, impossible travel, switch de device. Sin ese contexto de cuenta no puedo emitir veredicto.</div>
+      <div class="ag-footer">
+        <span class="ag-tag">requiere contexto cuenta</span>
+        <span class="ag-tag">velocity pendiente</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Vote strip -->
+  <div style="margin-bottom:10px">
+    <div class="lbl" style="margin-bottom:8px">Votos de los 10 agentes</div>
+    <div class="vote-strip">
+      <div class="vote-item risk"><div class="vote-dot"></div>Emulator/VM · 82</div>
+      <div class="vote-item risk"><div class="vote-dot"></div>Proxy/VPN · 74</div>
+      <div class="vote-item risk"><div class="vote-dot"></div>Browser Spoofing · 61</div>
+      <div class="vote-item warn"><div class="vote-dot"></div>Incognito · 34</div>
+      <div class="vote-item ok"><div class="vote-dot"></div>Bot · 12</div>
+      <div class="vote-item ok"><div class="vote-dot"></div>Anti-FP · 8</div>
+      <div class="vote-item ok"><div class="vote-dot"></div>Tor · 5</div>
+      <div class="vote-item ok" style="opacity:.5"><div class="vote-dot"></div>Device Sharing · —</div>
+      <div class="vote-item ok" style="opacity:.5"><div class="vote-dot"></div>Behavioral · —</div>
+      <div class="vote-item ok" style="opacity:.5"><div class="vote-dot"></div>ATO · —</div>
+    </div>
+  </div>
+
+  <!-- Orchestrator -->
+  <div class="orchestrator">
+    <div class="orc-top">
+      <div>
+        <div class="orc-eyebrow">Agente orquestador · decisión final</div>
+        <div class="orc-title">Revisión manual recomendada — perfil de emulador con VPN</div>
+      </div>
+      <div class="orc-score-wrap">
+        <div class="orc-score">78</div>
+        <div class="orc-score-sub">score agregado</div>
+      </div>
+    </div>
+    <div class="orc-insight">Recibí los reportes de los 10 agentes. Tres me preocupan especialmente: el Emulator/VM detectó inconsistencias físicas de hardware, el Proxy/VPN encontró la combinación timezone/idioma que en nuestra red es señal fuerte de VPN activa, y el Browser Spoofing confirmó un renderer ANGLE que no matchea con hardware real. Solos, cualquiera sería revisable. Los tres juntos configuran el patrón más común de fraude por emulador en la región.</div>
+    <div class="orc-footer">
+      <span class="orc-tag">3 alertas · 1 aviso · 3 limpios · 3 sin datos</span>
+      <span class="orc-tag">score: 78 / 100</span>
+      <span class="orc-tag">revisar manualmente</span>
+    </div>
+    <div class="orc-ecosystem">
+      <strong>Señal de ecosistema Koin:</strong> Este patrón de señales (ANGLE GPU + timezone/lang mismatch + cpuSpeed anómalo) coincide con el clúster de ataque activo que bloqueamos en <strong>847 devices</strong> en las últimas 24h, distribuido en <strong>12 merchants</strong> de la red. No es un device aislado — es parte de una campaña coordinada.
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ VECTORS ═══════════════════════════════ -->
+<div class="pane" id="pane-vectors">
+
+  <div class="vectors-layout">
+
+    <!-- Left sidebar -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="lbl" style="margin-bottom:12px">Score global</div>
+        <div class="ring-wrap">
+          <div class="ring-svg">
+            <svg viewBox="0 0 110 110" width="110" height="110">
+              <circle cx="55" cy="55" r="46" stroke="var(--border)" stroke-width="9" fill="none"/>
+              <circle cx="55" cy="55" r="46" stroke="var(--r600)" stroke-width="9" fill="none"
+                stroke-dasharray="289" stroke-dashoffset="64" stroke-linecap="round"
+                style="transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"/>
+            </svg>
+            <div class="ring-num" style="color:var(--r600)">78</div>
+          </div>
+          <div class="ring-lbl">riesgo alto · revisar</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="lbl" style="margin-bottom:12px">Composición</div>
+        <div>
+          <div class="comp-row"><span class="comp-lbl">Emulator / VM</span><div class="comp-bar-bg"><div class="comp-bar" style="width:82%;background:var(--r600)"></div></div><span class="comp-val" style="color:var(--r600)">82</span></div>
+          <div class="comp-row"><span class="comp-lbl">Proxy / VPN</span><div class="comp-bar-bg"><div class="comp-bar" style="width:74%;background:var(--r600)"></div></div><span class="comp-val" style="color:var(--r600)">74</span></div>
+          <div class="comp-row"><span class="comp-lbl">Browser Spoofing</span><div class="comp-bar-bg"><div class="comp-bar" style="width:61%;background:var(--a600)"></div></div><span class="comp-val" style="color:var(--a600)">61</span></div>
+          <div class="comp-row"><span class="comp-lbl">Incognito</span><div class="comp-bar-bg"><div class="comp-bar" style="width:34%;background:var(--a600)"></div></div><span class="comp-val" style="color:var(--a600)">34</span></div>
+          <div class="comp-row"><span class="comp-lbl">Bot</span><div class="comp-bar-bg"><div class="comp-bar" style="width:12%;background:var(--g600)"></div></div><span class="comp-val" style="color:var(--t3)">12</span></div>
+          <div class="comp-row"><span class="comp-lbl">Anti-Fingerprinting</span><div class="comp-bar-bg"><div class="comp-bar" style="width:8%;background:var(--g600)"></div></div><span class="comp-val" style="color:var(--t3)">8</span></div>
+          <div class="comp-row"><span class="comp-lbl">Tor</span><div class="comp-bar-bg"><div class="comp-bar" style="width:5%;background:var(--g600)"></div></div><span class="comp-val" style="color:var(--t3)">5</span></div>
+          <div class="comp-row" style="opacity:.4"><span class="comp-lbl">Device Sharing</span><div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div><span class="comp-val" style="color:var(--t4)">—</span></div>
+          <div class="comp-row" style="opacity:.4"><span class="comp-lbl">Behavioral</span><div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div><span class="comp-val" style="color:var(--t4)">—</span></div>
+          <div class="comp-row" style="opacity:.4"><span class="comp-lbl">Account Takeover</span><div class="comp-bar-bg"><div class="comp-bar" style="width:0%"></div></div><span class="comp-val" style="color:var(--t4)">—</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="lbl" style="margin-bottom:8px">Resumen</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Vectores activos</span><span style="font-weight:600;color:var(--r600)">3 críticos · 1 aviso</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Limpios</span><span style="font-weight:600;color:var(--g700)">3</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Sin datos</span><span style="font-weight:600;color:var(--t3)">3</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Señales analizadas</span><span style="font-weight:600">47</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: vector table -->
+    <div class="vtable">
+      <div class="vt-head">
+        <div></div>
+        <div class="vt-hcell">Vector</div>
+        <div class="vt-hcell">Señales disparadoras</div>
+        <div class="vt-hcell">Score</div>
+        <div class="vt-hcell">Peso</div>
+        <div class="vt-hcell" style="text-align:right">Estado</div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--r600)"></div>
+        <div class="vt-name">Emulator / VM<small>hardware · gpu · cpu</small></div>
+        <div class="vt-signals"><span class="vt-sig">ANGLE GPU</span><span class="vt-sig">cores/speed ratio</span><span class="vt-sig">pixelRatio=1</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:82%;background:var(--r600)"></div></div><div class="vt-score" style="color:var(--r600)">82</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">30%</div>
+        <div class="vt-status"><span class="pill p-red">Crítico</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--r600)"></div>
+        <div class="vt-name">Proxy / VPN<small>geo · idioma · timezone</small></div>
+        <div class="vt-signals"><span class="vt-sig">timezone=-3</span><span class="vt-sig">lang=es-ES</span><span class="vt-sig">discordancia</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:74%;background:var(--r600)"></div></div><div class="vt-score" style="color:var(--r600)">74</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">25%</div>
+        <div class="vt-status"><span class="pill p-red">Crítico</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--a600)"></div>
+        <div class="vt-name">Browser Spoofing<small>fingerprint · webgl · ua</small></div>
+        <div class="vt-signals"><span class="vt-sig">gpuVendor</span><span class="vt-sig">WebGL mismatch</span><span class="vt-sig">UA inconsistente</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:61%;background:var(--a600)"></div></div><div class="vt-score" style="color:var(--a600)">61</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">20%</div>
+        <div class="vt-status"><span class="pill p-amber">Alerta</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--a600)"></div>
+        <div class="vt-name">Incognito<small>storage · privacidad</small></div>
+        <div class="vt-signals"><span class="vt-sig">privateBrowsing=false</span><span class="vt-sig">quota API ausente</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:34%;background:var(--a600)"></div></div><div class="vt-score" style="color:var(--a600)">34</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">10%</div>
+        <div class="vt-status"><span class="pill p-amber">Aviso</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--g600)"></div>
+        <div class="vt-name">Bot<small>automatización · webdriver</small></div>
+        <div class="vt-signals"><span class="vt-sig">webdriver=false</span><span class="vt-sig">JS normal</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:12%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">12</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">8%</div>
+        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--g600)"></div>
+        <div class="vt-name">Anti-Fingerprinting<small>canvas · evasión</small></div>
+        <div class="vt-signals"><span class="vt-sig">canvas estable</span><span class="vt-sig">sin noise</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:8%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">8</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">5%</div>
+        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
+      </div>
+
+      <div class="vt-row">
+        <div class="vt-dot" style="background:var(--g600)"></div>
+        <div class="vt-name">Tor<small>exit nodes · RTT</small></div>
+        <div class="vt-signals"><span class="vt-sig">sin exit node</span><span class="vt-sig">RTT normal</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:5%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">5</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">2%</div>
+        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
+      </div>
+
+      <div class="vt-row roadmap">
+        <div class="vt-dot" style="background:var(--p200)"></div>
+        <div class="vt-name" style="color:var(--t3)">Device Sharing<small>historial · sesiones</small></div>
+        <div class="vt-signals"><span class="vt-sig">multi-user detection</span><span class="vt-sig">session history</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
+        <div class="vt-status"><span class="pill p-roadmap">Sin datos</span></div>
+      </div>
+
+      <div class="vt-row roadmap">
+        <div class="vt-dot" style="background:var(--p200)"></div>
+        <div class="vt-name" style="color:var(--t3)">Behavioral Anomaly<small>mouse · teclado · touch</small></div>
+        <div class="vt-signals"><span class="vt-sig">mouse events</span><span class="vt-sig">keyboard cadence</span><span class="vt-sig">touch pressure</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
+        <div class="vt-status"><span class="pill p-roadmap">Roadmap</span></div>
+      </div>
+
+      <div class="vt-row roadmap" style="border-bottom:none">
+        <div class="vt-dot" style="background:var(--p200)"></div>
+        <div class="vt-name" style="color:var(--t3)">Account Takeover<small>velocity · cuenta</small></div>
+        <div class="vt-signals"><span class="vt-sig">impossible travel</span><span class="vt-sig">device switch</span><span class="vt-sig">velocity</span></div>
+        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
+        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
+        <div class="vt-status"><span class="pill p-roadmap">Roadmap</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ INTELLIGENCE ═══════════════════════════════ -->
+<div class="pane" id="pane-intel">
+
+  <div style="margin-bottom:16px">
+    <div class="lbl" style="margin-bottom:4px">Device intelligence</div>
+    <p style="font-size:.78rem;color:var(--t2);line-height:1.6">Qué encontramos cuando cruzamos las señales entre sí. Cada hallazgo combina múltiples datos para detectar algo que ninguna señal sola podría ver.</p>
+  </div>
+
+  <div class="sec">Qué está mal</div>
+  <div class="intel-grid" style="margin-bottom:20px">
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge anomaly">Anomalía</div>
+        <div class="ic-title">El hardware es demasiado lento para tener 14 cores</div>
+        <div class="ic-vector">Emulator/VM</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">cores &gt;= 8 AND cpuSpeed.average &gt; 30ms → VM sospechosa</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">cores</span><span class="ic-sig-val anomaly">14 (anómalo)</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">cpuSpeed.average</span><span class="ic-sig-val anomaly">36.97ms (lento)</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">deviceMemory</span><span class="ic-sig-val warn">32GB</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">devicePixelRatio</span><span class="ic-sig-val warn">1 (bajo)</span></div>
+        </div>
+        <div class="ic-conclusion">Una PC con 14 cores debería ser 3× más rápida en el benchmark. Que sea tan lenta indica que los recursos están simulados — típico de una máquina virtual con specs infladas.</div>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge anomaly">Anomalía</div>
+        <div class="ic-title">El horario dice Argentina pero el idioma dice España</div>
+        <div class="ic-vector">Proxy/VPN</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">timezone_region != lang_region → posible VPN</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">timezone</span><span class="ic-sig-val anomaly">-3 → Argentina</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">lang</span><span class="ic-sig-val anomaly">es-ES → España</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">en nuestra red</span><span class="ic-sig-val anomaly">89% de veces = VPN</span></div>
+        </div>
+        <div class="ic-conclusion">Nadie configura su browser en español de España si vive en Argentina. Esta combinación no aparece en uso normal — casi siempre es alguien conectado a un servidor en otro país.</div>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge anomaly">Anomalía</div>
+        <div class="ic-title">La tarjeta gráfica es la de un browser sin pantalla real</div>
+        <div class="ic-vector">Browser Spoofing</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">gpuVendor contains "Google Inc." AND renderer contains "ANGLE" → virtualización</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">gpuVendor</span><span class="ic-sig-val anomaly">Google Inc. (Intel)</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">gpuName</span><span class="ic-sig-val anomaly">ANGLE (Intel...)</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">en emuladores</span><span class="ic-sig-val anomaly">94% tienen este GPU</span></div>
+        </div>
+        <div class="ic-conclusion">ANGLE es la GPU que usan los browsers que corren sin pantalla real — bots, emuladores, automatizaciones. Casi ningún usuario real tiene esta combinación.</div>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge anomaly">Anomalía</div>
+        <div class="ic-title">Windows 10 es el sistema operativo preferido para cometer fraude</div>
+        <div class="ic-vector">Browser Spoofing</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">osVersion IN deprecated_list AND fraud_rate_90d &gt; 0.6 → alerta</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">osVersion</span><span class="ic-sig-val anomaly">Windows 10 (viejo)</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">fraude asociado</span><span class="ic-sig-val anomaly">71% en 90 días</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">plataforma</span><span class="ic-sig-val warn">Win32</span></div>
+        </div>
+        <div class="ic-conclusion">En nuestra red, 7 de cada 10 devices con este OS estuvieron ligados a fraude en los últimos 3 meses. No es que Win10 sea malo — es que los emuladores baratos de la región lo usan por defecto.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sec">Qué está bien</div>
+  <div class="intel-grid" style="margin-bottom:20px">
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge ok">OK</div>
+        <div class="ic-title">La huella del browser no fue manipulada</div>
+        <div class="ic-vector">Anti-FP</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">canvasId stable across loads AND no noise injection → limpio</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">canvasId</span><span class="ic-sig-val ok">61b631b748... (estable)</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">manipulación</span><span class="ic-sig-val ok">no detectada</span></div>
+        </div>
+        <div class="ic-conclusion">El identificador visual del browser es siempre el mismo. Algunos usuarios lo falsifican para volverse anónimos — este no lo hizo. Punto a favor.</div>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge ok">OK</div>
+        <div class="ic-title">El almacenamiento del browser es normal</div>
+        <div class="ic-vector">Incognito</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">localStorage AND sessionStorage AND indexedDB AND cookies → storage normal</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">localStorage</span><span class="ic-sig-val ok">activo</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">sessionStorage</span><span class="ic-sig-val ok">activo</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">indexedDB</span><span class="ic-sig-val ok">activo</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">cookies</span><span class="ic-sig-val ok">activos</span></div>
+        </div>
+        <div class="ic-conclusion">En modo incógnito el espacio disponible se limita. Acá todo está disponible y sin restricciones, lo que sugiere que no está en incógnito — aunque no podemos confirmarlo al 100% sin más datos.</div>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="ic-head">
+        <div class="ic-badge ok">OK</div>
+        <div class="ic-title">No hay señales de automatización</div>
+        <div class="ic-vector">Bot</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">webdriver=false AND no headless flags → sin automatización</div>
+        <div class="ic-signals">
+          <div class="ic-sig-row"><span class="ic-sig-key">webdriver</span><span class="ic-sig-val ok">false</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">javaScriptEnabled</span><span class="ic-sig-val ok">true</span></div>
+          <div class="ic-sig-row"><span class="ic-sig-key">flags de bot</span><span class="ic-sig-val ok">ninguno</span></div>
+        </div>
+        <div class="ic-conclusion">No detectamos herramientas de automatización corriendo en el browser. Eso no descarta que sea un emulador — pero al menos no es un bot puro ejecutando scripts.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sec">Lo que viene (pendiente de implementar)</div>
+  <div class="intel-grid">
+    <div class="intel-card" style="opacity:.45">
+      <div class="ic-head">
+        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+        <div class="ic-title">Si la huella cambia pero la GPU no → alguien la está borrando a propósito</div>
+        <div class="ic-vector">Anti-FP</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">canvasId != prev_canvasId AND gpuName == prev_gpuName → anti-fingerprinting activo</div>
+        <div class="ic-conclusion">Para detectar esto necesitamos comparar sesiones pasadas. Disponible en Fase 2.</div>
+      </div>
+    </div>
+    <div class="intel-card" style="opacity:.45">
+      <div class="ic-head">
+        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+        <div class="ic-title">Si dice ser un celular pero la pantalla es de escritorio → está mintiendo</div>
+        <div class="ic-vector">Browser Spoofing</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">ua_mobile=true AND screen.width &gt;= 1920 → spoofing de UA</div>
+        <div class="ic-conclusion">Muy fácil de detectar y muy confiable. Se agrega en la próxima iteración.</div>
+      </div>
+    </div>
+    <div class="intel-card" style="opacity:.45">
+      <div class="ic-head">
+        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+        <div class="ic-title">IP local diferente a IP pública → VPN confirmada</div>
+        <div class="ic-vector">Proxy/VPN</div>
+      </div>
+      <div class="ic-body">
+        <div class="ic-rule">webrtc_local_ip != geoip_public → VPN confirmada</div>
+        <div class="ic-conclusion">La forma más directa de confirmar que alguien usa VPN. Requiere activar WebRTC en el collector.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ RAW SIGNALS ═══════════════════════════════ -->
+<div class="pane" id="pane-raw">
+
+  <div class="sig-legend">
+    <span>Estado de señal:</span>
+    <span class="pill p-new">NEW · próxima iteración</span>
+    <span class="pill p-roadmap">ROADMAP · detectado, no implementado</span>
+    <span style="font-size:.66rem;color:var(--t3)">· Sin badge = activa hoy (47 señales base)</span>
+  </div>
+
+  <!-- IDs -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--a50)"><svg viewBox="0 0 16 16" style="color:var(--amber)"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 6h12"/></svg></div>
+      <span class="ssh-title">Identificadores</span>
+      <span class="ssh-count">3 activas</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-key">organizationId</div>
+        <div class="sc-val sm">de4330cc45</div>
+      </div>
+      <div class="sc">
+        <div class="sc-key">sessionId</div>
+        <div class="sc-val sm">e62833c2cf246dd213...</div>
+        <div class="sc-desc">UUID único por link generado</div>
+      </div>
+      <div class="sc">
+        <div class="sc-key">device.id</div>
+        <div class="sc-val sm">2d3fda04d895...</div>
+        <div class="sc-desc">Hash estable del device</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Agent & OS -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--b50)"><svg viewBox="0 0 16 16" style="color:var(--b600)"><circle cx="8" cy="8" r="6"/><path d="M8 2a9 9 0 0 1 0 12M8 2a9 9 0 0 0 0 12M2 8h12"/></svg></div>
+      <span class="ssh-title">User Agent & OS</span>
+      <span class="ssh-count">7 activas</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc risk" style="grid-column:1/-1">
+        <div class="sc-key">session.userAgent</div>
+        <div class="sc-val sm">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0...</div>
+      </div>
+      <div class="sc risk">
+        <div class="sc-key">session.os · platform</div>
+        <div class="sc-val md">Win32</div>
+        <div class="sc-desc risk">OS deprecated · 71% fraude 90d</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">osVersion</span><span class="sc-rv risk">Windows 10</span></div>
+        <div class="sc-row"><span class="sc-rk">platform</span><span class="sc-rv">Win32</span></div>
+      </div>
+      <div class="sc warn">
+        <div class="sc-key">session.lang · timezone</div>
+        <div class="sc-val md">es-ES</div>
+        <div class="sc-desc warn">España · pero timezone -3 (ARG)</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">timezone</span><span class="sc-rv warn">-3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CPU & Hardware -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--a50)"><svg viewBox="0 0 16 16" style="color:var(--amber)"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M4 6H2M4 10H2M12 6h2M12 10h2M6 4V2M10 4V2M6 12v2M10 12v2"/></svg></div>
+      <span class="ssh-title">CPU & Hardware</span>
+      <span class="ssh-count">5 activas · 2 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc risk">
+        <div class="sc-key">cores · cpuSpeed · deviceMemory</div>
+        <div class="sc-val">14</div>
+        <div class="sc-desc risk">14 cores + 36ms avg → ratio anómalo</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">deviceMemory</span><span class="sc-rv">32 GB</span></div>
+        <div class="sc-row"><span class="sc-rk">cpuSpeed.average</span><span class="sc-rv risk">36.97ms</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-key">screen · resolution</div>
+        <div class="sc-val">1920×1080</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">colorDepth</span><span class="sc-rv">32-bit</span></div>
+        <div class="sc-row"><span class="sc-rk">availW/H</span><span class="sc-rv">1920/1032</span></div>
+        <div class="sc-row"><span class="sc-rk">orientation</span><span class="sc-rv">landscape</span></div>
+        <div class="sc-row"><span class="sc-rk">devicePixelRatio</span><span class="sc-rv warn">1</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">battery.level · charging</div>
+        <div class="sc-val sm">Battery API</div>
+        <div class="sc-desc">Hardware real vs VM · diferenciador clave</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">connection.type · rtt · downlink</div>
+        <div class="sc-val sm">Network Information API</div>
+        <div class="sc-desc">Tipo de red y latencia real</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GPU & WebGL -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><rect x="1" y="4" width="14" height="8" rx="1.5"/><path d="M4 8h8M4 8v2M8 8v2M12 8v2"/></svg></div>
+      <span class="ssh-title">GPU & WebGL</span>
+      <span class="ssh-count">3 activas · 2 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc risk">
+        <div class="sc-key">gpuVendor · gpuName</div>
+        <div class="sc-val md">Google Inc. (Intel)</div>
+        <div class="sc-desc risk">ANGLE renderer → virtualización 94%</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">gpuName</span><span class="sc-rv risk">ANGLE (Intel...)</span></div>
+      </div>
+      <div class="sc ok">
+        <div class="sc-key">canvasId</div>
+        <div class="sc-val sm">61b631b748bcd2332d...</div>
+        <div class="sc-desc">Hash estable · sin canvas spoofing</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">audioFingerprint</div>
+        <div class="sc-val sm">AudioContext hash</div>
+        <div class="sc-desc">FP complementario · alta discriminación</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">webgl.extensions list</div>
+        <div class="sc-val sm">Extension enumeration</div>
+        <div class="sc-desc">Lista de extensiones WebGL disponibles</div>
+      </div>
+      <div class="sc roadmap">
+        <div class="sc-status roadmap">ROADMAP</div>
+        <div class="sc-key">webgl.parameters hash</div>
+        <div class="sc-val sm">WebGL param fingerprint</div>
+        <div class="sc-desc">Hash de parámetros de renderizado</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage & Privacy -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--p50)"><svg viewBox="0 0 16 16" style="color:var(--p600)"><ellipse cx="8" cy="5" rx="5" ry="2.5"/><path d="M3 5v3c0 1.4 2.2 2.5 5 2.5S13 9.4 13 8V5"/><path d="M3 8v3c0 1.4 2.2 2.5 5 2.5S13 12.4 13 11V8"/></svg></div>
+      <span class="ssh-title">Storage & Privacy</span>
+      <span class="ssh-count">8 activas · 1 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc ok">
+        <div class="sc-key">storage flags</div>
+        <div class="sc-val md">Todos activos</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">cookies</span><span class="sc-rv ok">true</span></div>
+        <div class="sc-row"><span class="sc-rk">localStorage</span><span class="sc-rv ok">true</span></div>
+        <div class="sc-row"><span class="sc-rk">sessionStorage</span><span class="sc-rv ok">true</span></div>
+        <div class="sc-row"><span class="sc-rk">indexedDB</span><span class="sc-rv ok">true</span></div>
+      </div>
+      <div class="sc warn">
+        <div class="sc-key">privateBrowsing · doNotTrack</div>
+        <div class="sc-val md">false</div>
+        <div class="sc-desc warn">Flag directo · quota API pendiente</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">doNotTrack</span><span class="sc-rv">false</span></div>
+        <div class="sc-row"><span class="sc-rk">acceptContent</span><span class="sc-rv">/</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">storage.estimate().quota</div>
+        <div class="sc-val sm">Storage Quota API</div>
+        <div class="sc-desc">Detección de incógnito por quota &lt;120MB</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Browser capabilities -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--g50)"><svg viewBox="0 0 16 16" style="color:var(--g600)"><path d="M8 2C4.7 2 2 4.7 2 8s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z"/><path d="M8 5v3l2 2"/></svg></div>
+      <span class="ssh-title">Browser capabilities</span>
+      <span class="ssh-count">4 activas · 3 new · 2 roadmap</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-key">javaEnabled · javaScriptEnabled</div>
+        <div class="sc-val md">JS activo</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">javaEnabled</span><span class="sc-rv">false</span></div>
+        <div class="sc-row"><span class="sc-rk">javaScriptEnabled</span><span class="sc-rv ok">true</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">navigator.plugins count</div>
+        <div class="sc-val sm">Plugin enumeration</div>
+        <div class="sc-desc">0 plugins = headless/emulador</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">font detection list</div>
+        <div class="sc-val sm">Font enumeration</div>
+        <div class="sc-desc">Lista de fuentes instaladas</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">WebRTC IP leak</div>
+        <div class="sc-val sm">RTCPeerConnection</div>
+        <div class="sc-desc">IP local vs pública → VPN directa</div>
+      </div>
+      <div class="sc roadmap">
+        <div class="sc-status roadmap">ROADMAP</div>
+        <div class="sc-key">performance.timing</div>
+        <div class="sc-val sm">Timing fingerprint</div>
+        <div class="sc-desc">Latencias que distinguen VM de HW</div>
+      </div>
+      <div class="sc roadmap">
+        <div class="sc-status roadmap">ROADMAP</div>
+        <div class="sc-key">extension detection</div>
+        <div class="sc-val sm">Indirect ext. probing</div>
+        <div class="sc-desc">Detección indirecta de extensiones</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Behavioral -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--p50)"><svg viewBox="0 0 16 16" style="color:var(--p600)"><path d="M3 8c0-2.8 2.2-5 5-5s5 2.2 5 5-2.2 5-5 5"/><path d="M8 10V8l1.5-1.5"/></svg></div>
+      <span class="ssh-title">Behavioral signals</span>
+      <span class="ssh-count">0 activas · 5 roadmap</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc roadmap"><div class="sc-status roadmap">ROADMAP</div><div class="sc-key">mouse movement</div><div class="sc-val sm">MouseEvent tracking</div><div class="sc-desc">Velocidad, aceleración, patrones</div></div>
+      <div class="sc roadmap"><div class="sc-status roadmap">ROADMAP</div><div class="sc-key">keyboard cadence</div><div class="sc-val sm">KeyboardEvent timing</div><div class="sc-desc">Ritmo de tipeo · detección autofill</div></div>
+      <div class="sc roadmap"><div class="sc-status roadmap">ROADMAP</div><div class="sc-key">touch pressure</div><div class="sc-val sm">Touch API</div><div class="sc-desc">Presión variable → humano real</div></div>
+      <div class="sc roadmap"><div class="sc-status roadmap">ROADMAP</div><div class="sc-key">scroll pattern</div><div class="sc-val sm">ScrollEvent analysis</div><div class="sc-desc">Scroll humano vs automatizado</div></div>
+      <div class="sc roadmap"><div class="sc-status roadmap">ROADMAP</div><div class="sc-key">session duration</div><div class="sc-val sm">Time-on-page</div><div class="sc-desc">Tiempo y navegación · contexto</div></div>
+    </div>
+  </div>
+
+</div><!-- /raw -->
+
+</div>
+</div>
+
+<script>
+function go(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pane-' + id).classList.add('active');
+}
+</script>
+</body>
+</html>
