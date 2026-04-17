@@ -7,15 +7,14 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  const { conversation_id, request_id, apiKey } = req.query
+  const { request_id, apiKey } = req.query
 
-  const url = 'https://api.toqan.ai/api/get_answer'
-    + '?conversation_id=' + encodeURIComponent(conversation_id)
-    + '&request_id='      + encodeURIComponent(request_id)
-
-  const response = await fetch(url, {
-    headers: { 'X-Api-Key': apiKey }
-  })
+  const response = await fetch(
+    `https://api.toqan.ai/api/get_answer?request_id=${request_id}`,
+    {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    }
+  )
 
   const data = await response.json()
   res.status(response.status).json(data)

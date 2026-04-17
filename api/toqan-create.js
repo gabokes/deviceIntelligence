@@ -7,15 +7,15 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  const { apiKey, user_message } = req.body
+  const { apiKey, message } = req.body
 
   const response = await fetch('https://api.toqan.ai/api/create_conversation', {
     method: 'POST',
     headers: {
-      'X-Api-Key': apiKey,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ user_message })
+    body: JSON.stringify({ message })
   })
 
   const data = await response.json()
