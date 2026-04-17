@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
   const response = await fetch('https://api.toqan.ai/api/create_conversation', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'X-Api-Key': apiKey,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ message })

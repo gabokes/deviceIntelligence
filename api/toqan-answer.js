@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     `https://api.toqan.ai/api/get_answer?request_id=${request_id}`,
     {
       headers: {
-        'Authorization': `Bearer ${apiKey}`
+        'X-Api-Key': apiKey
       }
     }
   )
