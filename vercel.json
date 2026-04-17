@@ -1,5 +1,6 @@
 {
   "outputDirectory": ".",
+  "buildCommand": "",
   "rewrites": [
     { "source": "/", "destination": "/landing.html" },
     { "source": "/dashboard.html", "destination": "/dashboard.html" },
