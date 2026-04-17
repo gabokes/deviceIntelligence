@@ -709,7 +709,7 @@ btn.disabled = true
 btn.textContent = 'Capturando señales del device...'
 btn.onclick = function() {
   if (window.KOIN_ANALYSIS_READY) {
-    window.location.href = 'dashboard.html'
+    window.location.href = '/dashboard.html'
   } else {
     window.KOIN_USER_CLICKED = true
   }
@@ -756,7 +756,7 @@ Promise.all([_deviceDataPromise, _intelligencePromise, _insightsPromise]).then(f
   btn.style.background = 'var(--brand)'
 
   if (window.KOIN_USER_CLICKED) {
-    window.location.href = 'dashboard.html'
+    window.location.href = '/dashboard.html'
   }
 })
 </script>
