@@ -292,13 +292,9 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
       <svg viewBox="0 0 16 16"><path d="M2 13L5 7l3 3 3-4 3 4"/></svg>
       Vectores
     </div>
-    <div class="tab" onclick="go('intel',this)">
-      <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 2 10 2-5h3"/></svg>
-      Intelligence
-    </div>
     <div class="tab" onclick="go('raw',this)">
       <svg viewBox="0 0 16 16"><path d="M5 3H3a1 1 0 0 0-1 1v2M5 13H3a1 1 0 0 1-1-1v-2M11 3h2a1 1 0 0 1 1 1v2M11 13h2a1 1 0 0 0 1-1v-2"/></svg>
-      Señales raw
+      Señales capturadas
     </div>
   </div>
 </div>
@@ -321,12 +317,17 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
       <div style="font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--r600);margin-bottom:4px">Decisión recomendada · Agente Orquestador</div>
       <div style="font-size:1.05rem;font-weight:600;color:var(--r600);letter-spacing:-.02em;margin-bottom:8px" id="hero-verdict-label">Revisar antes de aprobar</div>
       <div id="hero-desc" style="font-size:.78rem;color:var(--t2);line-height:1.65;margin-bottom:12px">Este device opera desde un entorno virtualizado detrás de una VPN. Tres agentes coinciden en señales críticas. El patrón es parte de una campaña activa en el ecosistema.</div>
-      <div id="hero-pills" style="display:flex;gap:6px;flex-wrap:wrap">
+      <div id="hero-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
         <span class="pill p-red">3 alertas críticas</span>
         <span class="pill p-amber">1 aviso</span>
         <span class="pill p-green">3 limpios</span>
         <span class="pill p-gray">3 sin datos</span>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <span class="pill p-gray" id="hero-score-pill">score: 78 / 100</span>
+        <span class="pill p-red" id="hero-verdict-pill">revisar manualmente</span>
+      </div>
+      <div id="hero-ecosystem" style="font-size:.72rem;color:var(--t2);font-style:italic;line-height:1.6;display:none"></div>
     </div>
     <div style="text-align:right;flex-shrink:0">
       <div style="font-size:3.2rem;font-weight:700;letter-spacing:-.05em;color:var(--r600);line-height:1" id="hero-score">78</div>
@@ -526,29 +527,6 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
     </div>
   </div>
 
-  <!-- Orchestrator -->
-  <div class="orchestrator">
-    <div class="orc-top">
-      <div>
-        <div class="orc-eyebrow">Agente orquestador · decisión final</div>
-        <div class="orc-title" id="orc-title">Revisión manual recomendada — perfil de emulador con VPN</div>
-      </div>
-      <div class="orc-score-wrap">
-        <div class="orc-score" id="orc-score">78</div>
-        <div class="orc-score-sub">score agregado</div>
-      </div>
-    </div>
-    <div class="orc-insight" id="orc-insight">Recibí los reportes de los 10 agentes. Tres me preocupan especialmente: el Emulator/VM detectó inconsistencias físicas de hardware, el Proxy/VPN encontró la combinación timezone/idioma que en nuestra red es señal fuerte de VPN activa, y el Browser Spoofing confirmó un renderer ANGLE que no matchea con hardware real. Solos, cualquiera sería revisable. Los tres juntos configuran el patrón más común de fraude por emulador en la región.</div>
-    <div class="orc-footer" id="orc-footer">
-      <span class="orc-tag">3 alertas · 1 aviso · 3 limpios · 3 sin datos</span>
-      <span class="orc-tag" id="orc-tag-score">score: 78 / 100</span>
-      <span class="orc-tag">revisar manualmente</span>
-    </div>
-    <div class="orc-ecosystem" id="orc-ecosystem">
-      <strong>Señal de ecosistema Koin:</strong> Este patrón de señales (ANGLE GPU + timezone/lang mismatch + cpuSpeed anómalo) coincide con el clúster de ataque activo que bloqueamos en <strong>847 devices</strong> en las últimas 24h, distribuido en <strong>12 merchants</strong> de la red. No es un device aislado — es parte de una campaña coordinada.
-    </div>
-  </div>
-
 </div>
 
 <!-- ═══════════════════════════════ VECTORS ═══════════════════════════════ -->
@@ -601,174 +579,65 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
       </div>
     </div>
 
-    <!-- Right: vector table -->
-    <div class="vtable" id="vtable">
-      <div class="vt-head">
-        <div></div>
-        <div class="vt-hcell">Vector</div>
-        <div class="vt-hcell">Señales disparadoras</div>
-        <div class="vt-hcell">Score</div>
-        <div class="vt-hcell">Peso</div>
-        <div class="vt-hcell" style="text-align:right">Estado</div>
+    <!-- Right: device intelligence -->
+    <div>
+      <div style="margin-bottom:16px">
+        <div class="lbl" style="margin-bottom:4px">Device intelligence</div>
+        <p style="font-size:.78rem;color:var(--t2);line-height:1.6">Qué encontramos cuando cruzamos las señales entre sí. Cada hallazgo combina múltiples datos para detectar algo que ninguna señal sola podría ver.</p>
       </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--r600)"></div>
-        <div class="vt-name">Emulator / VM<small>hardware · gpu · cpu</small></div>
-        <div class="vt-signals"><span class="vt-sig">ANGLE GPU</span><span class="vt-sig">cores/speed ratio</span><span class="vt-sig">pixelRatio=1</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:82%;background:var(--r600)"></div></div><div class="vt-score" style="color:var(--r600)">82</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">30%</div>
-        <div class="vt-status"><span class="pill p-red">Crítico</span></div>
+      <div class="intel-filters">
+        <button class="if-btn active" onclick="filterIntel('all',this)">Todas</button>
+        <button class="if-btn" onclick="filterIntel('anomaly',this)">Anomalías</button>
+        <button class="if-btn" onclick="filterIntel('ok',this)">OK</button>
+        <button class="if-btn" onclick="filterIntel('bot',this)">Bot</button>
+        <button class="if-btn" onclick="filterIntel('emulator',this)">Emulator/VM</button>
+        <button class="if-btn" onclick="filterIntel('proxy',this)">Proxy/VPN</button>
+        <button class="if-btn" onclick="filterIntel('spoof',this)">Spoofing</button>
+        <span class="if-count" id="if-count"></span>
       </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--r600)"></div>
-        <div class="vt-name">Proxy / VPN<small>geo · idioma · timezone</small></div>
-        <div class="vt-signals"><span class="vt-sig">timezone=-3</span><span class="vt-sig">lang=es-ES</span><span class="vt-sig">discordancia</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:74%;background:var(--r600)"></div></div><div class="vt-score" style="color:var(--r600)">74</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">25%</div>
-        <div class="vt-status"><span class="pill p-red">Crítico</span></div>
+      <div id="intel-dynamic" style="margin-top:12px"></div>
+      <div class="sec" id="sec-soon">Lo que viene (pendiente de implementar)</div>
+      <div class="intel-grid">
+        <div class="intel-card" style="opacity:.45">
+          <div class="ic-head">
+            <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+            <div class="ic-title">Si la huella cambia pero la GPU no → alguien la está borrando a propósito</div>
+            <div class="ic-vector">Anti-FP</div>
+          </div>
+          <div class="ic-body">
+            <div class="ic-rule">canvasId != prev_canvasId AND gpuName == prev_gpuName → anti-fingerprinting activo</div>
+            <div class="ic-conclusion">Para detectar esto necesitamos comparar sesiones pasadas. Disponible en Fase 2.</div>
+          </div>
+        </div>
+        <div class="intel-card" style="opacity:.45">
+          <div class="ic-head">
+            <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+            <div class="ic-title">Si dice ser un celular pero la pantalla es de escritorio → está mintiendo</div>
+            <div class="ic-vector">Browser Spoofing</div>
+          </div>
+          <div class="ic-body">
+            <div class="ic-rule">ua_mobile=true AND screen.width &gt;= 1920 → spoofing de UA</div>
+            <div class="ic-conclusion">Muy fácil de detectar y muy confiable. Se agrega en la próxima iteración.</div>
+          </div>
+        </div>
+        <div class="intel-card" style="opacity:.45">
+          <div class="ic-head">
+            <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
+            <div class="ic-title">IP local diferente a IP pública → VPN confirmada</div>
+            <div class="ic-vector">Proxy/VPN</div>
+          </div>
+          <div class="ic-body">
+            <div class="ic-rule">webrtc_local_ip != geoip_public → VPN confirmada</div>
+            <div class="ic-conclusion">La forma más directa de confirmar que alguien usa VPN. Requiere activar WebRTC en el collector.</div>
+          </div>
+        </div>
       </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--a600)"></div>
-        <div class="vt-name">Browser Spoofing<small>fingerprint · webgl · ua</small></div>
-        <div class="vt-signals"><span class="vt-sig">gpuVendor</span><span class="vt-sig">WebGL mismatch</span><span class="vt-sig">UA inconsistente</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:61%;background:var(--a600)"></div></div><div class="vt-score" style="color:var(--a600)">61</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">20%</div>
-        <div class="vt-status"><span class="pill p-amber">Alerta</span></div>
-      </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--a600)"></div>
-        <div class="vt-name">Incognito<small>storage · privacidad</small></div>
-        <div class="vt-signals"><span class="vt-sig">privateBrowsing=false</span><span class="vt-sig">quota API ausente</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:34%;background:var(--a600)"></div></div><div class="vt-score" style="color:var(--a600)">34</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">10%</div>
-        <div class="vt-status"><span class="pill p-amber">Aviso</span></div>
-      </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--g600)"></div>
-        <div class="vt-name">Bot<small>automatización · webdriver</small></div>
-        <div class="vt-signals"><span class="vt-sig">webdriver=false</span><span class="vt-sig">JS normal</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:12%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">12</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">8%</div>
-        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
-      </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--g600)"></div>
-        <div class="vt-name">Anti-Fingerprinting<small>canvas · evasión</small></div>
-        <div class="vt-signals"><span class="vt-sig">canvas estable</span><span class="vt-sig">sin noise</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:8%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">8</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">5%</div>
-        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
-      </div>
-
-      <div class="vt-row">
-        <div class="vt-dot" style="background:var(--g600)"></div>
-        <div class="vt-name">Tor<small>exit nodes · RTT</small></div>
-        <div class="vt-signals"><span class="vt-sig">sin exit node</span><span class="vt-sig">RTT normal</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:5%;background:var(--g600)"></div></div><div class="vt-score" style="color:var(--t3)">5</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t2)">2%</div>
-        <div class="vt-status"><span class="pill p-green">Limpio</span></div>
-      </div>
-
-      <div class="vt-row roadmap">
-        <div class="vt-dot" style="background:var(--p200)"></div>
-        <div class="vt-name" style="color:var(--t3)">Device Sharing<small>historial · sesiones</small></div>
-        <div class="vt-signals"><span class="vt-sig">multi-user detection</span><span class="vt-sig">session history</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
-        <div class="vt-status"><span class="pill p-roadmap">Sin datos</span></div>
-      </div>
-
-      <div class="vt-row roadmap">
-        <div class="vt-dot" style="background:var(--p200)"></div>
-        <div class="vt-name" style="color:var(--t3)">Behavioral Anomaly<small>mouse · teclado · touch</small></div>
-        <div class="vt-signals"><span class="vt-sig">mouse events</span><span class="vt-sig">keyboard cadence</span><span class="vt-sig">touch pressure</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
-        <div class="vt-status"><span class="pill p-roadmap">Roadmap</span></div>
-      </div>
-
-      <div class="vt-row roadmap" style="border-bottom:none">
-        <div class="vt-dot" style="background:var(--p200)"></div>
-        <div class="vt-name" style="color:var(--t3)">Account Takeover<small>velocity · cuenta</small></div>
-        <div class="vt-signals"><span class="vt-sig">impossible travel</span><span class="vt-sig">device switch</span><span class="vt-sig">velocity</span></div>
-        <div><div class="vt-bar-bg"><div class="vt-bar" style="width:0%"></div></div><div class="vt-score" style="color:var(--t4)">—</div></div>
-        <div style="font-family:var(--mono);font-size:.62rem;color:var(--t4)">—</div>
-        <div class="vt-status"><span class="pill p-roadmap">Roadmap</span></div>
-      </div>
-
     </div>
+
   </div>
 </div>
 
 <!-- ═══════════════════════════════ INTELLIGENCE ═══════════════════════════════ -->
-<div class="pane" id="pane-intel">
-
-  <div style="margin-bottom:16px">
-    <div class="lbl" style="margin-bottom:4px">Device intelligence</div>
-    <p style="font-size:.78rem;color:var(--t2);line-height:1.6">Qué encontramos cuando cruzamos las señales entre sí. Cada hallazgo combina múltiples datos para detectar algo que ninguna señal sola podría ver.</p>
-  </div>
-
-  <!-- Filter bar -->
-  <div class="intel-filters">
-    <button class="if-btn active" onclick="filterIntel('all',this)">Todas</button>
-    <button class="if-btn" onclick="filterIntel('anomaly',this)">Anomalías</button>
-    <button class="if-btn" onclick="filterIntel('ok',this)">OK</button>
-    <button class="if-btn" onclick="filterIntel('bot',this)">Bot</button>
-    <button class="if-btn" onclick="filterIntel('emulator',this)">Emulator/VM</button>
-    <button class="if-btn" onclick="filterIntel('proxy',this)">Proxy/VPN</button>
-    <button class="if-btn" onclick="filterIntel('spoof',this)">Spoofing</button>
-    <span class="if-count" id="if-count"></span>
-  </div>
-
-  <!-- Dynamic sections rendered by JS -->
-  <div id="intel-dynamic"></div>
-
-  <!-- Static "Próximamente" section -->
-  <div class="sec" id="sec-soon">Lo que viene (pendiente de implementar)</div>
-  <div class="intel-grid">
-    <div class="intel-card" style="opacity:.45">
-      <div class="ic-head">
-        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
-        <div class="ic-title">Si la huella cambia pero la GPU no → alguien la está borrando a propósito</div>
-        <div class="ic-vector">Anti-FP</div>
-      </div>
-      <div class="ic-body">
-        <div class="ic-rule">canvasId != prev_canvasId AND gpuName == prev_gpuName → anti-fingerprinting activo</div>
-        <div class="ic-conclusion">Para detectar esto necesitamos comparar sesiones pasadas. Disponible en Fase 2.</div>
-      </div>
-    </div>
-    <div class="intel-card" style="opacity:.45">
-      <div class="ic-head">
-        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
-        <div class="ic-title">Si dice ser un celular pero la pantalla es de escritorio → está mintiendo</div>
-        <div class="ic-vector">Browser Spoofing</div>
-      </div>
-      <div class="ic-body">
-        <div class="ic-rule">ua_mobile=true AND screen.width &gt;= 1920 → spoofing de UA</div>
-        <div class="ic-conclusion">Muy fácil de detectar y muy confiable. Se agrega en la próxima iteración.</div>
-      </div>
-    </div>
-    <div class="intel-card" style="opacity:.45">
-      <div class="ic-head">
-        <div class="ic-badge" style="background:var(--p100);color:var(--p700)">Próximamente</div>
-        <div class="ic-title">IP local diferente a IP pública → VPN confirmada</div>
-        <div class="ic-vector">Proxy/VPN</div>
-      </div>
-      <div class="ic-body">
-        <div class="ic-rule">webrtc_local_ip != geoip_public → VPN confirmada</div>
-        <div class="ic-conclusion">La forma más directa de confirmar que alguien usa VPN. Requiere activar WebRTC en el collector.</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
 <!-- ═══════════════════════════════ RAW SIGNALS ═══════════════════════════════ -->
 <div class="pane" id="pane-raw">
 
@@ -1546,13 +1415,6 @@ function applySession(S) {
   const heroVerdict = document.getElementById('hero-verdict-label')
   if (heroVerdict) heroVerdict.textContent = m.verdictLabel || m.verdict
 
-  // Orchestrator score
-  const orcScore = document.getElementById('orc-score')
-  if (orcScore) orcScore.textContent = m.overallScore
-
-  const orcTagScore = document.getElementById('orc-tag-score')
-  if (orcTagScore) orcTagScore.textContent = 'score: ' + m.overallScore + ' / 100'
-
   // Ring (vectors tab)
   const ringNum = document.getElementById('ring-num')
   if (ringNum) ringNum.textContent = m.overallScore
@@ -2062,24 +1924,23 @@ function applyInsights(data) {
   var voteLbl = document.getElementById('vote-strip-lbl')
   if (voteLbl) voteLbl.textContent = 'Votos de los ' + Object.keys(agents).length + ' agentes'
 
-  // Orchestrator
-  var orcTitle = document.getElementById('orc-title')
-  if (orcTitle) orcTitle.textContent = orc.title || ''
-  var orcInsight = document.getElementById('orc-insight')
-  if (orcInsight) orcInsight.textContent = orc.insight || ''
-  var orcScore = document.getElementById('orc-score')
-  if (orcScore) orcScore.textContent = meta.overallScore
-  var orcTagScore = document.getElementById('orc-tag-score')
-  if (orcTagScore) orcTagScore.textContent = 'score: ' + meta.overallScore + ' / 100'
-  var orcFooter = document.getElementById('orc-footer')
-  if (orcFooter) {
-    var verdictTag = { block: 'bloquear', review: 'revisar manualmente', monitor: 'monitorear', allow: 'aprobar' }
-    orcFooter.innerHTML = '<span class="orc-tag">' + _countsText(meta) + '</span>'
-      + '<span class="orc-tag">score: ' + meta.overallScore + ' / 100</span>'
-      + '<span class="orc-tag">' + (verdictTag[meta.verdict] || meta.verdict || '') + '</span>'
+  // Hero card — score pill + verdict pill + ecosystem
+  var scorePill = document.getElementById('hero-score-pill')
+  if (scorePill) scorePill.textContent = 'score: ' + meta.overallScore + ' / 100'
+
+  var verdictPillMap = { block: 'bloquear', review: 'revisar manualmente', monitor: 'monitorear', allow: 'aprobar' }
+  var verdictPillCls = { block: 'p-red', review: 'p-amber', monitor: 'p-amber', allow: 'p-green' }
+  var verdictPill = document.getElementById('hero-verdict-pill')
+  if (verdictPill) {
+    verdictPill.textContent = verdictPillMap[meta.verdict] || meta.verdict || ''
+    verdictPill.className = 'pill ' + (verdictPillCls[meta.verdict] || 'p-gray')
   }
-  var orcEco = document.getElementById('orc-ecosystem')
-  if (orcEco) orcEco.innerHTML = orc.ecosystemSignal || ''
+
+  var ecoEl = document.getElementById('hero-ecosystem')
+  if (ecoEl && orc.ecosystemSignal) {
+    ecoEl.innerHTML = orc.ecosystemSignal
+    ecoEl.style.display = 'block'
+  }
 
   // Vectors — ring
   var score      = meta.overallScore
