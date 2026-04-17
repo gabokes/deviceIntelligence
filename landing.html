@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koin · Browser Intelligence — Antifraude para Retail & Travel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F4F7;--surface:#fff;--s2:#F8F9FB;--s3:#F2F4F7;
+  --border:#E4E7EC;--border-s:#D0D5DD;
+  --t1:#101828;--t2:#475467;--t3:#98A2B3;--t4:#D0D5DD;
+  --g50:#F6FEF9;--g100:#DCFAE6;--g600:#079455;--g700:#067647;
+  --a50:#FFFAEB;--a100:#FEF0C7;--a600:#DC6803;--amber:#B54708;
+  --r50:#FEF3F2;--r100:#FEE4E2;--r600:#D92D20;
+  --b50:#EFF8FF;--b100:#D1E9FF;--b600:#1570EF;
+  --p50:#F4F3FF;--p100:#EBE9FE;--p200:#C9C5F7;--p600:#6938EF;--p700:#5925DC;
+  --brand:#17B26A;--brand-dark:#067647;
+  --mono:'DM Mono',monospace;--sans:'Geist',sans-serif;
+}
+html{font-size:14px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--t1);overflow-x:hidden}
+svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 40px;height:56px;gap:12px}
+.nav-mark{width:28px;height:28px;background:var(--t1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-mark svg{width:14px;height:14px;stroke:#fff}
+.nav-name{font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.nav-div{width:1px;height:16px;background:var(--border)}
+.nav-links{display:flex;gap:24px;margin-left:8px}
+.nav-links a{font-size:.76rem;color:var(--t2);text-decoration:none;transition:color .12s}
+.nav-links a:hover{color:var(--t1)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn-ghost-sm{border:1px solid var(--border-s);color:var(--t1);padding:7px 16px;border-radius:8px;font-size:.74rem;font-weight:500;text-decoration:none;cursor:pointer;background:var(--surface);transition:background .12s;display:inline-flex;align-items:center}
+.btn-ghost-sm:hover{background:var(--s2)}
+.btn-brand{background:var(--brand);color:#fff;padding:7px 18px;border-radius:8px;font-size:.74rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .12s;display:inline-flex;align-items:center}
+.btn-brand:hover{background:var(--brand-dark)}
+
+/* HERO */
+.hero-wrap{background:var(--surface);border-bottom:1px solid var(--border)}
+.hero{max-width:1200px;margin:0 auto;padding:72px 40px 64px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-s);border-radius:20px;padding:4px 14px;margin-bottom:24px;font-family:var(--mono);font-size:.6rem;color:var(--t2)}
+.hero-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--brand);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:2.8rem;font-weight:700;letter-spacing:-.035em;line-height:1.1;margin-bottom:18px}
+.hero h1 strong{color:var(--brand)}
+.hero-sub{font-size:.9rem;color:var(--t2);line-height:1.75;margin-bottom:32px;max-width:460px}
+.hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn-primary-lg{background:var(--t1);color:#fff;padding:12px 24px;border-radius:9px;font-size:.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .12s;border:none;cursor:pointer;font-family:var(--sans)}
+.btn-primary-lg:hover{background:#1D2939}
+.btn-primary-lg:disabled{opacity:.6;cursor:not-allowed}
+.btn-ghost-lg{border:1px solid var(--border-s);color:var(--t1);padding:12px 24px;border-radius:9px;font-size:.82rem;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .12s}
+.btn-ghost-lg:hover{background:var(--s2)}
+
+/* HERO VERDICT CARD */
+.hero-verdict{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 4px 24px rgba(16,24,40,.08)}
+.hv-session{font-family:var(--mono);font-size:.58rem;color:var(--t3);margin-bottom:8px}
+.hv-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.hv-title-area{}
+.hv-eyebrow{font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:3px}
+.hv-title{font-size:.86rem;font-weight:600;letter-spacing:-.01em}
+.hv-chip{display:flex;align-items:center;gap:10px;background:var(--r50);border:1px solid var(--r100);border-radius:9px;padding:10px 14px;flex-shrink:0}
+.hv-score{font-size:2.2rem;font-weight:700;color:var(--r600);letter-spacing:-.04em;line-height:1}
+.hv-chip-labels{}
+.hv-chip-label{font-size:.62rem;font-weight:600;color:var(--r600)}
+.hv-chip-sub{font-size:.55rem;color:var(--t3);margin-top:1px}
+.mini-agents{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:12px}
+.ma{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:8px 5px;text-align:center}
+.ma-bar{height:2px;border-radius:1px;margin-bottom:6px}
+.ma-name{font-size:.5rem;font-weight:600;color:var(--t2);line-height:1.3;margin-bottom:3px}
+.ma-score{font-family:var(--mono);font-size:.6rem;font-weight:500}
+.ma-score.r{color:var(--r600)}.ma-score.a{color:var(--a600)}.ma-score.g{color:var(--g600)}.ma-score.n{color:var(--t4)}
+.ma-insight{background:var(--p50);border:1px solid var(--p100);border-left:3px solid var(--p600);border-radius:7px;padding:11px 13px;font-size:.67rem;color:var(--p700);line-height:1.6}
+.ma-insight strong{font-weight:600}
+.hv-footer{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:.56rem;font-weight:600;border:1px solid;white-space:nowrap;font-family:var(--mono)}
+.p-r{background:var(--r50);color:var(--r600);border-color:var(--r100)}
+.p-a{background:var(--a50);color:var(--amber);border-color:var(--a100)}
+.p-g{background:var(--g50);color:var(--g700);border-color:var(--g100)}
+.p-gray{background:var(--s3);color:var(--t2);border-color:var(--border)}
+
+/* STATS */
+.stats-strip{background:var(--t1);padding:32px 40px}
+.stats-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);border-left:1px solid rgba(255,255,255,.1)}
+.stat{padding:16px 28px;border-right:1px solid rgba(255,255,255,.1)}
+.stat-num{font-size:2.4rem;font-weight:700;color:var(--brand);letter-spacing:-.04em;line-height:1}
+.stat-label{font-size:.7rem;color:rgba(255,255,255,.5);margin-top:5px;line-height:1.4}
+.stat-context{font-size:.62rem;color:rgba(255,255,255,.3);margin-top:2px}
+
+/* SECTIONS */
+.section{max-width:1200px;margin:0 auto;padding:80px 40px}
+.sec-eyebrow{font-family:var(--mono);font-size:.6rem;color:var(--brand);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:14px}
+.sec-sub{font-size:.88rem;color:var(--t2);line-height:1.75;max-width:520px}
+
+/* PROBLEM */
+.problem-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:44px}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;position:relative;overflow:hidden}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.pc.r::before{background:var(--r600)}.pc.a::before{background:var(--a600)}
+.pc-industry{font-family:var(--mono);font-size:.56rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.pc-num{font-size:2.6rem;font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:5px}
+.pc-num.r{color:var(--r600)}.pc-num.a{color:var(--a600)}
+.pc-title{font-size:.8rem;font-weight:600;margin-bottom:8px}
+.pc-desc{font-size:.73rem;color:var(--t2);line-height:1.65}
+.pc-quote{margin-top:12px;font-size:.68rem;color:var(--t2);font-style:italic;border-left:2px solid var(--border-s);padding-left:10px;line-height:1.6}
+
+/* AGENTS */
+.agents-bg{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.agents-layout{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+.vote-strip{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.vote{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:.58rem;font-weight:500;border:1px solid}
+.vote.r{background:var(--r50);border-color:var(--r100);color:var(--r600)}
+.vote.a{background:var(--a50);border-color:var(--a100);color:var(--amber)}
+.vote.g{background:var(--g50);border-color:var(--g100);color:var(--g700)}
+.vote.nd{background:var(--s3);border-color:var(--border);color:var(--t3);opacity:.6}
+.vote-dot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.ag-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.ag{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px;position:relative;overflow:hidden}
+.ag::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ag.r::before{background:var(--r600)}.ag.a::before{background:var(--a600)}.ag.g::before{background:var(--brand)}
+.ag-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:7px}
+.ag-meta{font-family:var(--mono);font-size:.5rem;color:var(--t3);margin-bottom:1px}
+.ag-name{font-size:.74rem;font-weight:600}
+.ag-badge{font-size:.54rem;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;font-family:var(--mono)}
+.ag-badge.r{background:var(--r100);color:var(--r600)}
+.ag-badge.a{background:var(--a100);color:var(--amber)}
+.ag-badge.g{background:var(--g100);color:var(--g700)}
+.ag-insight{font-size:.65rem;color:var(--t1);line-height:1.6;border-left:2px solid var(--p200);padding-left:9px;font-style:italic}
+.orc{background:#EEEDFE;border:.5px solid var(--p200);border-radius:12px;padding:20px 22px}
+.orc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.orc-meta{font-size:.58rem;color:var(--p700);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.orc-title{font-size:.92rem;font-weight:600;color:#26215C;letter-spacing:-.01em}
+.orc-score{font-size:3rem;font-weight:700;color:#26215C;letter-spacing:-.05em;line-height:1}
+.orc-score-sub{font-size:.58rem;color:var(--p700);margin-top:2px;text-align:right}
+.orc-insight{font-size:.7rem;color:#3C3489;line-height:1.65;border-left:2px solid #7F77DD;padding-left:10px;font-style:italic;margin-bottom:12px}
+.orc-eco{font-size:.67rem;color:#3C3489;line-height:1.65;border-top:.5px solid var(--p200);padding-top:10px}
+.orc-eco strong{color:#26215C}
+
+/* VERDICT ACTIONS */
+.verdict-actions{display:flex;flex-direction:column;gap:8px;margin-top:24px}
+.va{border-radius:8px;padding:11px 14px;font-size:.73rem;line-height:1.55}
+.va.r{background:var(--r50);border:1px solid var(--r100);color:var(--r600)}
+.va.a{background:var(--a50);border:1px solid var(--a100);color:var(--amber)}
+.va.g{background:var(--g50);border:1px solid var(--g100);color:var(--g700)}
+.va strong{font-weight:600}
+
+/* INDUSTRIES */
+.industry-tabs{display:flex;gap:8px;margin-top:28px;margin-bottom:28px;flex-wrap:wrap}
+.ind-tab{padding:8px 18px;border-radius:8px;font-size:.76rem;font-weight:500;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--t2);transition:all .12s;user-select:none}
+.ind-tab.active,.ind-tab:hover{background:var(--t1);color:#fff;border-color:var(--t1)}
+.industry-content{display:none}.industry-content.active{display:block}
+.industry-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ind-case{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.ind-label{font-family:var(--mono);font-size:.56rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.ind-scenario{font-size:.82rem;font-weight:600;margin-bottom:10px;line-height:1.4}
+.ind-signals{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.ind-sig{font-size:.56rem;background:var(--s3);color:var(--t2);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-family:var(--mono)}
+.ind-outcome{border-radius:7px;padding:9px 11px;font-size:.7rem;font-weight:500;line-height:1.5}
+.ind-outcome.block{background:var(--r50);border:1px solid var(--r100);color:var(--r600)}
+.ind-outcome.review{background:var(--a50);border:1px solid var(--a100);color:var(--amber)}
+.ind-outcome.ok{background:var(--g50);border:1px solid var(--g100);color:var(--g700)}
+
+/* ROI */
+.roi-strip{background:var(--t1)}
+.roi-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.2fr 1fr;align-items:center}
+.roi-left{padding:64px 56px 64px 40px;border-right:1px solid rgba(255,255,255,.08)}
+.roi-right{padding:48px 40px 48px 48px}
+.roi-eyebrow{font-family:var(--mono);font-size:.58rem;color:rgba(255,255,255,.3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px}
+.roi-title{font-size:2rem;font-weight:700;color:#fff;letter-spacing:-.03em;line-height:1.15;margin-bottom:10px}
+.roi-sub{font-size:.8rem;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:32px}
+.roi-metric{margin-bottom:22px}
+.roi-num{font-size:2.2rem;font-weight:700;color:var(--brand);letter-spacing:-.04em;line-height:1}
+.roi-desc{font-size:.73rem;color:rgba(255,255,255,.45);margin-top:4px;line-height:1.5}
+.roi-disclaimer{font-size:.62rem;color:rgba(255,255,255,.2);margin-top:20px;line-height:1.6}
+.calc-title{font-size:.58rem;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);margin-bottom:14px}
+.roi-calc{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:20px}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.73rem}
+.calc-row:last-child{border-bottom:none;margin-top:4px;padding-top:14px}
+.calc-label{color:rgba(255,255,255,.45)}
+.calc-val{color:#fff;font-weight:600;font-family:var(--mono)}
+.calc-val.brand{color:var(--brand);font-size:.86rem}
+
+/* HOW */
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px}
+.how-step{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:22px;position:relative}
+.hs-num{font-size:.58rem;font-family:var(--mono);color:var(--brand);font-weight:600;letter-spacing:.1em;margin-bottom:12px}
+.hs-icon{width:38px;height:38px;border-radius:9px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.hs-icon svg{width:17px;height:17px;color:var(--t2)}
+.hs-title{font-size:.84rem;font-weight:600;margin-bottom:7px}
+.hs-desc{font-size:.73rem;color:var(--t2);line-height:1.7}
+.hs-tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:.56rem;background:var(--g50);color:var(--g700);border:1px solid var(--g100);padding:3px 8px;border-radius:4px}
+
+/* COMPARISON */
+.comp-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:44px}
+.comp-head{display:grid;grid-template-columns:190px repeat(5,1fr);background:var(--s2);border-bottom:1px solid var(--border)}
+.ch{padding:11px 14px;font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);border-right:1px solid var(--border)}
+.ch:last-child{border-right:none}
+.comp-row{display:grid;grid-template-columns:190px repeat(5,1fr);border-bottom:1px solid var(--border)}
+.comp-row:last-child{border-bottom:none}
+.comp-row.koin-row{background:var(--g50)}
+.cc{padding:12px 14px;font-size:.73rem;color:var(--t2);border-right:1px solid var(--border);display:flex;align-items:center}
+.cc:last-child{border-right:none}
+.cc:first-child{font-weight:600;color:var(--t1)}
+.comp-row.koin-row .cc:first-child{color:var(--brand)}
+.check-y{color:var(--g600);font-weight:600}
+.check-n{color:var(--t4)}
+.check-p{color:var(--amber)}
+
+/* CTA */
+.cta-bg{background:var(--surface);border-top:1px solid var(--border)}
+.cta-inner{max-width:1200px;margin:0 auto;padding:88px 40px;text-align:center}
+.cta-inner h2{font-size:2.4rem;font-weight:700;letter-spacing:-.03em;margin-bottom:14px;line-height:1.15}
+.cta-inner p{font-size:.88rem;color:var(--t2);max-width:460px;margin:0 auto 36px;line-height:1.75}
+.cta-btns{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.cta-trust{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
+.cta-trust span{font-size:.68rem;color:var(--t3)}
+
+/* FOOTER */
+.footer{background:var(--surface);padding:28px 40px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.footer-copy{font-size:.65rem;color:var(--t3)}
+.footer-right{font-family:var(--mono);font-size:.62rem;color:var(--t3)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero{grid-template-columns:1fr;padding:56px 20px 40px;gap:32px}
+  .hero h1{font-size:2rem}
+  .stats-inner{grid-template-columns:1fr 1fr}
+  .stat{padding:14px 18px}
+  .problem-grid{grid-template-columns:1fr}
+  .agents-layout{grid-template-columns:1fr}
+  .industry-grid{grid-template-columns:1fr}
+  .roi-inner{grid-template-columns:1fr}
+  .roi-left{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);padding:48px 24px}
+  .roi-right{padding:32px 24px}
+  .how-grid{grid-template-columns:1fr}
+  .comp-head,.comp-row{grid-template-columns:150px repeat(3,1fr)}
+  .ch:nth-child(5),.ch:nth-child(6),.cc:nth-child(5),.cc:nth-child(6){display:none}
+  .section{padding:56px 20px}
+  .cta-inner{padding:64px 20px}
+  .footer{flex-direction:column;gap:8px;text-align:center;padding:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <div class="nav-mark">
+    <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><path d="M9 11.5h6M12 9v5"/></svg>
+  </div>
+  <span class="nav-name">Koin</span>
+  <div class="nav-div"></div>
+  <div class="nav-links">
+    <a href="#agents">Cómo funciona</a>
+    <a href="#industrias">Retail &amp; Travel</a>
+    <a href="#roi">ROI</a>
+    <a href="#compare">Comparativa</a>
+  </div>
+  <div class="nav-right">
+    <a href="#cta" class="btn-ghost-sm">Ver demo</a>
+    <a href="#cta" class="btn-brand">Hablar con un experto</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero-wrap">
+  <div class="hero">
+    <div>
+      <div class="hero-badge">Antifraude · Retail &amp; Travel · LATAM</div>
+      <h1>Detectamos el fraude<br>antes de que el pago<br><strong>te cueste el cliente.</strong></h1>
+      <p class="hero-sub">Koin analiza cada sesión en tiempo real. Si el device es sospechoso, lo sabemos antes de que llegue al checkout — sin fricción para el comprador legítimo.</p>
+      <div class="hero-actions">
+        <button id="btn-analyze" class="btn-primary-lg">
+          <svg width="13" height="13" viewBox="0 0 16 16"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+          Ver mi sesión analizada
+        </button>
+        <a href="#agents" class="btn-ghost-lg">Cómo funciona →</a>
+      </div>
+    </div>
+    <div class="hero-verdict">
+      <div class="hv-session">Sesión analizada · e62833c2cf · 187ms · Windows 10 · Chrome 124 · timezone −3 · lang es-ES</div>
+      <div class="hv-header">
+        <div class="hv-title-area">
+          <div class="hv-eyebrow">10 agentes analizaron este device en paralelo</div>
+          <div class="hv-title">Veredicto del orquestador</div>
+        </div>
+        <div class="hv-chip">
+          <div class="hv-chip-labels">
+            <div class="hv-chip-label">Riesgo alto</div>
+            <div class="hv-chip-sub">Revisar antes de aprobar</div>
+          </div>
+          <div class="hv-score">78</div>
+        </div>
+      </div>
+      <div class="mini-agents">
+        <div class="ma"><div class="ma-bar" style="background:var(--r600)"></div><div class="ma-name">Emulator<br>/ VM</div><div class="ma-score r">82</div></div>
+        <div class="ma"><div class="ma-bar" style="background:var(--r600)"></div><div class="ma-name">Proxy<br>/ VPN</div><div class="ma-score r">74</div></div>
+        <div class="ma"><div class="ma-bar" style="background:var(--a600)"></div><div class="ma-name">Browser<br>Spoof</div><div class="ma-score a">61</div></div>
+        <div class="ma"><div class="ma-bar" style="background:var(--a600)"></div><div class="ma-name">Incog-<br>nito</div><div class="ma-score a">34</div></div>
+        <div class="ma"><div class="ma-bar" style="background:var(--brand)"></div><div class="ma-name">Bot<br>Det.</div><div class="ma-score g">12</div></div>
+      </div>
+      <div class="ma-insight">
+        <strong>Orquestador:</strong> Tres agentes coinciden en señales críticas — hardware virtual, VPN activa y renderer de emulador. En nuestra red, este patrón tiene una tasa de fraude <strong>4.2× el baseline</strong>. Campaña activa en 12 merchants esta semana.
+      </div>
+      <div class="hv-footer">
+        <span class="pill p-r">3 alertas críticas</span>
+        <span class="pill p-a">1 aviso</span>
+        <span class="pill p-g">3 limpios</span>
+        <span class="pill p-gray">3 sin datos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">−40%</div><div class="stat-label">chargebacks en 90 días</div><div class="stat-context">promedio clientes activos</div></div>
+    <div class="stat"><div class="stat-num">187ms</div><div class="stat-label">análisis completo</div><div class="stat-context">sin impacto en checkout</div></div>
+    <div class="stat"><div class="stat-num">10</div><div class="stat-label">agentes de IA en paralelo</div><div class="stat-context">cada uno especialista en un riesgo</div></div>
+    <div class="stat"><div class="stat-num">0</div><div class="stat-label">permisos del usuario</div><div class="stat-context">sin fricción para el comprador legítimo</div></div>
+  </div>
+</div>
+
+<!-- ═══ PROBLEM ═══ -->
+<div style="background:var(--bg)">
+  <div class="section">
+    <div class="sec-eyebrow">El problema</div>
+    <h2 class="sec-title">El fraude avanzó.<br>Las reglas estáticas, no.</h2>
+    <p class="sec-sub">Los equipos de fraude pierden tiempo revisando transacciones que ya pasaron. Koin detecta el patrón antes de que llegue al checkout.</p>
+    <div class="problem-grid">
+      <div class="pc r">
+        <div class="pc-industry">Retail · eCommerce</div>
+        <div class="pc-num r">70%</div>
+        <div class="pc-title">del fraude en LATAM viene de bots</div>
+        <div class="pc-desc">Compras masivas con tarjetas robadas, abuso de promociones, creación de cuentas falsas. Operan en escala que ningún analista puede revisar a mano.</div>
+        <div class="pc-quote">"Bloqueamos un ataque de 800 devices coordinados que en el sistema anterior hubiéramos visto recién al cierre de mes." — Retailer, ARG</div>
+      </div>
+      <div class="pc a">
+        <div class="pc-industry">Travel · OTA · Aerolíneas</div>
+        <div class="pc-num a">4.2×</div>
+        <div class="pc-title">más fraude cuando timezone e idioma no coinciden</div>
+        <div class="pc-desc">Compra de vuelos con VPN para esconder la ubicación real. Es el patrón más común en chargebacks de tickets internacionales — y el más fácil de detectar con las señales correctas.</div>
+        <div class="pc-quote">"Los chargebacks en rutas internacionales bajaron 35% en el primer trimestre." — OTA, MX</div>
+      </div>
+      <div class="pc r">
+        <div class="pc-industry">Retail · Marketplaces</div>
+        <div class="pc-num r">94%</div>
+        <div class="pc-title">de los emuladores tienen la misma GPU</div>
+        <div class="pc-desc">Los fraud farms usan máquinas virtuales baratas con configuraciones predecibles. Koin los identifica en milisegundos, mucho antes de que intenten pagar.</div>
+        <div class="pc-quote">"Ahora rechazamos dispositivos sospechosos antes del checkout, no después del chargeback." — eCommerce, BR</div>
+      </div>
+      <div class="pc a">
+        <div class="pc-industry">Travel · Hotels · Experiencias</div>
+        <div class="pc-num a">−25%</div>
+        <div class="pc-title">en falsos positivos vs sistemas anteriores</div>
+        <div class="pc-desc">Bloquear compradores legítimos cuesta tanto como el fraude. El análisis de 10 agentes en paralelo da un contexto completo — no una sola señal que puede ser falsa.</div>
+        <div class="pc-quote">"Recuperamos revenue que estábamos perdiendo por bloqueos incorrectos." — Cadena hotelera, CO</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AGENTS ═══ -->
+<div class="agents-bg" id="agents">
+  <div class="section">
+    <div class="agents-layout">
+      <!-- LEFT -->
+      <div>
+        <div class="sec-eyebrow">Cómo funciona</div>
+        <h2 class="sec-title">10 especialistas.<br>Una decisión.<br>Menos de un segundo.</h2>
+        <p class="sec-sub">Cuando un usuario llega a tu sitio, Koin activa 10 agentes de IA simultáneamente. Cada uno es experto en un tipo de amenaza distinta. Al terminar, un agente orquestador lee todos los resultados y emite un veredicto — con el razonamiento completo.</p>
+        <div class="verdict-actions">
+          <div class="va r"><strong>Rechazar</strong> — Score 75–100. El sistema bloquea o desafía automáticamente. Cero fricción manual.</div>
+          <div class="va a"><strong>Revisar</strong> — Score 40–74. Tu equipo lo ve con el contexto completo de los 10 agentes. Decisión informada.</div>
+          <div class="va g"><strong>Aprobar</strong> — Score 0–39. El comprador legítimo no siente nada distinto. Revenue protegido.</div>
+        </div>
+      </div>
+      <!-- RIGHT -->
+      <div>
+        <div style="font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:8px;font-family:var(--mono)">Votos de los 10 agentes — sesión real</div>
+        <div class="vote-strip">
+          <div class="vote r"><div class="vote-dot"></div>Emulator/VM · 82</div>
+          <div class="vote r"><div class="vote-dot"></div>Proxy/VPN · 74</div>
+          <div class="vote r"><div class="vote-dot"></div>Br. Spoofing · 61</div>
+          <div class="vote a"><div class="vote-dot"></div>Incognito · 34</div>
+          <div class="vote g"><div class="vote-dot"></div>Bot · 12</div>
+          <div class="vote g"><div class="vote-dot"></div>Anti-FP · 8</div>
+          <div class="vote g"><div class="vote-dot"></div>Tor · 5</div>
+          <div class="vote nd"><div class="vote-dot"></div>Device Sharing · —</div>
+          <div class="vote nd"><div class="vote-dot"></div>Behavioral · —</div>
+          <div class="vote nd"><div class="vote-dot"></div>ATO · —</div>
+        </div>
+        <div class="ag-grid">
+          <div class="ag r">
+            <div class="ag-top"><div><div class="ag-meta">hardware · gpu · cpu</div><div class="ag-name">Emulator / VM</div></div><div class="ag-badge r">Alerta · 82</div></div>
+            <div class="ag-insight">14 cores con 36ms de benchmark es físicamente imposible. El perfil completo corresponde a una máquina virtual con recursos inflados artificialmente.</div>
+          </div>
+          <div class="ag r">
+            <div class="ag-top"><div><div class="ag-meta">geolocalización · red</div><div class="ag-name">Proxy / VPN</div></div><div class="ag-badge r">Alerta · 74</div></div>
+            <div class="ag-insight">Timezone −3 (ARG) con idioma es-ES (España). En nuestra red este par tiene fraude 4.2× el baseline. VPN activa con alta probabilidad.</div>
+          </div>
+          <div class="ag a">
+            <div class="ag-top"><div><div class="ag-meta">fingerprint · webgl · ua</div><div class="ag-name">Browser Spoofing</div></div><div class="ag-badge a">Aviso · 61</div></div>
+            <div class="ag-insight">GPU renderer "ANGLE" aparece en el 94% de los headless browsers. El UA declara Windows/Chrome pero el contexto WebGL no coincide con hardware real.</div>
+          </div>
+          <div class="ag g">
+            <div class="ag-top"><div><div class="ag-meta">automatización · webdriver</div><div class="ag-name">Bot Detection</div></div><div class="ag-badge g">Limpio · 12</div></div>
+            <div class="ag-insight">navigator.webdriver en false, sin flags de automatización. El perfil de JS execution es consistente con usuario humano operando el browser.</div>
+          </div>
+        </div>
+        <div class="orc">
+          <div class="orc-top">
+            <div>
+              <div class="orc-meta">Agente orquestador · decisión final</div>
+              <div class="orc-title">Revisión manual recomendada — VM con VPN activa</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="orc-score">78</div>
+              <div class="orc-score-sub">score agregado / 100</div>
+            </div>
+          </div>
+          <div class="orc-insight">Recibí los reportes de los 10 agentes. Tres coinciden en señales críticas. El patrón — ANGLE GPU + timezone/idioma mismatch + hardware virtual — corresponde a una campaña activa que bloqueamos en 847 devices en las últimas 24 horas, distribuida en 12 merchants de la región.</div>
+          <div class="orc-eco"><strong>Señal de red Koin:</strong> Este patrón está activo en <strong>12 merchants</strong> de la región esta semana. No es un caso aislado — es una campaña coordinada.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INDUSTRIES ═══ -->
+<div style="background:var(--bg)" id="industrias">
+  <div class="section">
+    <div class="sec-eyebrow">Por industria</div>
+    <h2 class="sec-title">Casos concretos<br>de Retail y Travel.</h2>
+    <p class="sec-sub">Cada industria tiene sus patrones de fraude. Koin los conoce y los detecta antes del daño.</p>
+
+    <div class="industry-tabs">
+      <div class="ind-tab active" onclick="showInd('retail',this)">Retail &amp; eCommerce</div>
+      <div class="ind-tab" onclick="showInd('travel',this)">Travel &amp; OTA</div>
+      <div class="ind-tab" onclick="showInd('aero',this)">Aerolíneas</div>
+    </div>
+
+    <div class="industry-content active" id="ind-retail">
+      <div class="industry-grid">
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Retail</div>
+          <div class="ind-scenario">Bot comprando sneakers en lanzamiento con 200 tarjetas distintas</div>
+          <div class="ind-signals"><span class="ind-sig">webdriver=true</span><span class="ind-sig">mouse_entropy=1.2</span><span class="ind-sig">click_timing=45ms±2</span><span class="ind-sig">ANGLE GPU</span></div>
+          <div class="ind-outcome block">Bloqueado en 187ms · Antes de agregar al carrito · Score 91</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Marketplace</div>
+          <div class="ind-scenario">Fraude ring creando 50 cuentas vendedor desde el mismo device virtual</div>
+          <div class="ind-signals"><span class="ind-sig">cores/speed ratio anómalo</span><span class="ind-sig">devicePixelRatio=1</span><span class="ind-sig">sin audio fingerprint</span><span class="ind-sig">VM indicators</span></div>
+          <div class="ind-outcome block">Rechazado · Score 91 · Emulator/VM confirmado</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · eCommerce</div>
+          <div class="ind-scenario">Usuario legítimo comprando con VPN corporativa de su empresa</div>
+          <div class="ind-signals"><span class="ind-sig">VPN detectada</span><span class="ind-sig">mouse_entropy=4.8</span><span class="ind-sig">keyboard=natural</span><span class="ind-sig">device conocido</span></div>
+          <div class="ind-outcome ok">Aprobado · Score 28 · VPN sin otros indicadores de riesgo</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Retail</div>
+          <div class="ind-scenario">Abuso de cupón de descuento con múltiples cuentas desde el mismo device</div>
+          <div class="ind-signals"><span class="ind-sig">device_id reutilizado</span><span class="ind-sig">canvasId estable</span><span class="ind-sig">3 cuentas distintas</span><span class="ind-sig">device sharing</span></div>
+          <div class="ind-outcome review">Marcado para revisión · Score 67 · Device Sharing detectado</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="industry-content" id="ind-travel">
+      <div class="industry-grid">
+        <div class="ind-case">
+          <div class="ind-label">Escenario · OTA</div>
+          <div class="ind-scenario">Compra de paquete vacacional con tarjeta robada desde device con VPN</div>
+          <div class="ind-signals"><span class="ind-sig">timezone=-3</span><span class="ind-sig">lang=es-ES</span><span class="ind-sig">WebRTC IP leak MX</span><span class="ind-sig">fraude 4.2× baseline</span></div>
+          <div class="ind-outcome block">Bloqueado · Score 82 · VPN + patrón conocido en red Koin</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · OTA</div>
+          <div class="ind-scenario">Scalper automatizado comprando toda la disponibilidad de hoteles para revender</div>
+          <div class="ind-signals"><span class="ind-sig">bot_score=88</span><span class="ind-sig">scroll_pattern=lineal</span><span class="ind-sig">velocidad anómala</span><span class="ind-sig">Puppeteer detectado</span></div>
+          <div class="ind-outcome block">Bloqueado · Score 88 · Automatización confirmada</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Travel</div>
+          <div class="ind-scenario">Turista argentino comprando desde hotel en Europa con browser en español ES</div>
+          <div class="ind-signals"><span class="ind-sig">proxy sin VPN</span><span class="ind-sig">device_memory=16GB</span><span class="ind-sig">comportamiento natural</span><span class="ind-sig">device conocido</span></div>
+          <div class="ind-outcome ok">Aprobado · Score 19 · Device y comportamiento conocido</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · OTA</div>
+          <div class="ind-scenario">Solicitud de reembolso fraudulento con device que nunca registró la compra original</div>
+          <div class="ind-signals"><span class="ind-sig">device_id nuevo</span><span class="ind-sig">emulador detectado</span><span class="ind-sig">primera sesión</span><span class="ind-sig">ATO indicators</span></div>
+          <div class="ind-outcome review">Revisión manual · Score 71 · Device no coincide con compra</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="industry-content" id="ind-aero">
+      <div class="industry-grid">
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Aerolínea</div>
+          <div class="ind-scenario">Compra masiva de tickets internacionales con tarjetas robadas desde farm de emuladores</div>
+          <div class="ind-signals"><span class="ind-sig">ANGLE GPU</span><span class="ind-sig">847 devices red Koin</span><span class="ind-sig">campaña activa</span><span class="ind-sig">VPN confirmada</span></div>
+          <div class="ind-outcome block">Bloqueado · Score 94 · Campaña coordinada identificada</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Aerolínea</div>
+          <div class="ind-scenario">Account takeover: acceso a cuenta de millas desde device nunca visto antes</div>
+          <div class="ind-signals"><span class="ind-sig">device_id nuevo</span><span class="ind-sig">timezone distinto al histórico</span><span class="ind-sig">impossible travel</span><span class="ind-sig">millas: valor alto</span></div>
+          <div class="ind-outcome block">Bloqueado · Score 86 · ATO + impossible travel detectado</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Aerolínea</div>
+          <div class="ind-scenario">Pasajero frecuente comprando desde hotel con WiFi corporativa detrás de proxy</div>
+          <div class="ind-signals"><span class="ind-sig">proxy detectado</span><span class="ind-sig">device conocido</span><span class="ind-sig">historial limpio</span><span class="ind-sig">comportamiento normal</span></div>
+          <div class="ind-outcome ok">Aprobado · Score 31 · Proxy sin señales adicionales de riesgo</div>
+        </div>
+        <div class="ind-case">
+          <div class="ind-label">Escenario · Aerolínea</div>
+          <div class="ind-scenario">Bot reservando y liberando asientos en clase business para manipular precios dinámicos</div>
+          <div class="ind-signals"><span class="ind-sig">webdriver detectado</span><span class="ind-sig">mouse=lineal</span><span class="ind-sig">timing=45ms exacto</span><span class="ind-sig">Selenium artifacts</span></div>
+          <div class="ind-outcome block">Bloqueado · Score 96 · Bot confirmado · Selenium identificado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROI ═══ -->
+<div class="roi-strip" id="roi">
+  <div class="roi-inner">
+    <div class="roi-left">
+      <div class="roi-eyebrow">Impacto en negocio</div>
+      <div class="roi-title">Lo que Koin<br>devuelve en revenue.</div>
+      <div class="roi-sub">Basado en métricas promedio de clientes activos en LATAM. Los números reales dependen de tu volumen y tasa de fraude actual.</div>
+      <div class="roi-metric"><div class="roi-num">−40%</div><div class="roi-desc">reducción de chargebacks en los primeros 90 días</div></div>
+      <div class="roi-metric"><div class="roi-num">−25%</div><div class="roi-desc">menos falsos positivos — más revenue de compradores legítimos</div></div>
+      <div class="roi-metric"><div class="roi-num">+35%</div><div class="roi-desc">eficiencia del equipo de fraude — menos revisiones manuales</div></div>
+      <div class="roi-disclaimer">Basado en promedios de la red Koin. Tu caso puede variar. Lo calculamos juntos en la demo — gratis, sin compromiso.</div>
+    </div>
+    <div class="roi-right">
+      <div class="calc-title">Calculadora de impacto estimado</div>
+      <div class="roi-calc">
+        <div class="calc-row"><span class="calc-label">Transacciones mensuales</span><span class="calc-val">100.000</span></div>
+        <div class="calc-row"><span class="calc-label">Tasa de fraude estimada</span><span class="calc-val">1.2%</span></div>
+        <div class="calc-row"><span class="calc-label">Ticket promedio</span><span class="calc-val">USD 85</span></div>
+        <div class="calc-row"><span class="calc-label">Pérdida mensual por fraude</span><span class="calc-val">USD 102.000</span></div>
+        <div class="calc-row"><span class="calc-label">Reducción con Koin (−40%)</span><span class="calc-val brand">USD 40.800/mes</span></div>
+        <div class="calc-row"><span class="calc-label" style="color:#fff;font-weight:600">ROI estimado anual</span><span class="calc-val brand" style="font-size:.92rem">USD 489.600</span></div>
+      </div>
+      <div style="font-size:.62rem;color:rgba(255,255,255,.22);margin-top:12px;line-height:1.6">Calculamos el ROI real con tus números en la primera conversación. Sin compromisos.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HOW ═══ -->
+<div style="background:var(--bg)">
+  <div class="section">
+    <div class="sec-eyebrow">Integración</div>
+    <h2 class="sec-title">Activo en un día,<br>sin cambiar tu stack.</h2>
+    <p class="sec-sub">Una línea de código en el frontend. Tu equipo técnico no necesita dedicar un sprint entero.</p>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="hs-num">01 · Frontend</div>
+        <div class="hs-icon">
+          <svg viewBox="0 0 16 16"><path d="M5 3l-3 5 3 5M11 3l3 5-3 5M9 2l-2 12"/></svg>
+        </div>
+        <div class="hs-title">Una línea de script</div>
+        <div class="hs-desc">Pegás el tag en tu HTML. Empieza a capturar señales automáticamente en cada sesión. Sin dependencias, sin SDK nativo, sin permisos al usuario.</div>
+        <span class="hs-tag">~10 min de setup</span>
+      </div>
+      <div class="how-step">
+        <div class="hs-num">02 · Backend</div>
+        <div class="hs-icon">
+          <svg viewBox="0 0 16 16"><path d="M2 5h12M2 11h12M5 2v12M11 2v12"/></svg>
+        </div>
+        <div class="hs-title">Una llamada a la API</div>
+        <div class="hs-desc">En el momento del checkout, tu backend envía el sessionId. Los 10 agentes corren en paralelo y responden en menos de 300ms con el score y el razonamiento.</div>
+        <span class="hs-tag">REST API · Docs incluidas</span>
+      </div>
+      <div class="how-step">
+        <div class="hs-num">03 · Decisión</div>
+        <div class="hs-icon">
+          <svg viewBox="0 0 16 16"><path d="M3 8l4 4 6-6"/></svg>
+        </div>
+        <div class="hs-title">Usás el veredicto como querés</div>
+        <div class="hs-desc">Automatizás el rechazo para scores altos, mandás a revisión manual los intermedios, y aprobás automáticamente los bajos. Vos configurás los umbrales.</div>
+        <span class="hs-tag">Sin bloqueos opacos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ COMPARISON ═══ -->
+<div style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)" id="compare">
+  <div class="section">
+    <div class="sec-eyebrow">Comparativa</div>
+    <h2 class="sec-title">Hecho para LATAM.</h2>
+    <p class="sec-sub">Las plataformas globales no están optimizadas para los patrones de fraude de la región ni para los equipos de LATAM.</p>
+    <div class="comp-wrap">
+      <div class="comp-head">
+        <div class="ch">Plataforma</div>
+        <div class="ch">Sin permisos usuario</div>
+        <div class="ch">Razonamiento visible</div>
+        <div class="ch">Agentes paralelos</div>
+        <div class="ch">Foco LATAM</div>
+        <div class="ch">Integración 1 día</div>
+      </div>
+      <div class="comp-row koin-row">
+        <div class="cc">Koin Browser Intel.</div>
+        <div class="cc"><span class="check-y">✓ 100%</span></div>
+        <div class="cc"><span class="check-y">✓ Completa</span></div>
+        <div class="cc"><span class="check-y">✓ 10 agentes</span></div>
+        <div class="cc"><span class="check-y">✓ Nativo</span></div>
+        <div class="cc"><span class="check-y">✓ Sí</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="cc">FingerprintJS</div>
+        <div class="cc"><span class="check-p">Parcial</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-p">Parcial</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="cc">SHIELD</div>
+        <div class="cc"><span class="check-p">SDK mobile req.</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-p">Parcial</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="cc">Incognia</div>
+        <div class="cc"><span class="check-p">GPS requerido</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-p">Parcial</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+      </div>
+      <div class="comp-row">
+        <div class="cc">DataDome</div>
+        <div class="cc"><span class="check-y">✓</span></div>
+        <div class="cc"><span class="check-p">Limitada</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-n">✗</span></div>
+        <div class="cc"><span class="check-p">Parcial</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CTA ═══ -->
+<div class="cta-bg" id="cta">
+  <div class="cta-inner">
+    <div class="sec-eyebrow" style="text-align:center">Empezá hoy</div>
+    <h2>Mirá cómo se vería<br>tu checkout analizado.</h2>
+    <p>30 minutos. Un experto de Koin te muestra una sesión real del tipo de fraude más común en tu industria — y calculamos el ROI con tus números.</p>
+    <div class="cta-btns">
+      <a href="#" class="btn-primary-lg">
+        <svg width="13" height="13" viewBox="0 0 16 16"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+        Agendar demo gratuita
+      </a>
+      <a href="#" class="btn-ghost-lg">Ver documentación técnica</a>
+    </div>
+    <div class="cta-trust">
+      <span>✓ Sin contrato de largo plazo</span>
+      <span>✓ Activo en un día</span>
+      <span>✓ LGPD compliant</span>
+      <span>✓ Soporte en tu timezone</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  <div class="footer-copy">© 2025 Koin · Browser Intelligence · Todos los derechos reservados</div>
+  <div class="footer-right">LGPD compliant · 0 permisos de usuario requeridos</div>
+</div>
+
+<script src="src/config.js"></script>
+<script src="src/data/dummy_session.js"></script>
+<script src="src/fingerprint/collector.js"></script>
+<script src="src/fingerprint/toqan.js"></script>
+<script src="src/fingerprint/toqan-insights.js"></script>
+<script>
+function showInd(id, el) {
+  document.querySelectorAll('.ind-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.industry-content').forEach(function(c){c.classList.remove('active')});
+  el.classList.add('active');
+  document.getElementById('ind-'+id).classList.add('active');
+}
+
+window.KOIN_USER_CLICKED = false
+window.KOIN_ANALYSIS_READY = false
+
+var btn = document.getElementById('btn-analyze')
+btn.disabled = true
+btn.textContent = 'Capturando señales del device...'
+btn.onclick = function() {
+  if (window.KOIN_ANALYSIS_READY) {
+    window.location.href = '/dashboard.html'
+  } else {
+    window.KOIN_USER_CLICKED = true
+  }
+}
+
+// Fase 1 — collector
+var _deviceDataPromise = KoinCollector.collect().catch(function(e) {
+  console.error('[Koin] collect error:', e)
+  return null
+})
+
+// Fases 2 y 3 — ambos agentes en PARALELO después de collector
+var _intelligencePromise = _deviceDataPromise.then(function(data) {
+  if (data) btn.textContent = 'Analizando sesión con IA...'
+  console.log('[Koin] arrancando agente intelligence, apiKey:', KOIN_CONFIG.toqan.apiKey.slice(0,8))
+  return data ? analyzeWithToqan(data) : null
+}).catch(function(e) {
+  console.error('[Koin] intelligence error:', e)
+  return null
+})
+
+var _insightsPromise = _deviceDataPromise.then(function(data) {
+  console.log('[Koin] arrancando agente insights, apiKey:', KOIN_CONFIG.toqanInsights.apiKey.slice(0,8))
+  return data ? analyzeInsightsWithToqan(data, null) : null
+}).catch(function(e) {
+  console.error('[Koin] insights error:', e)
+  return null
+})
+
+// Cuando los tres terminan
+Promise.all([_deviceDataPromise, _intelligencePromise, _insightsPromise]).then(function(results) {
+  var deviceData      = results[0]
+  var intelligenceData = results[1]
+  var insightsData    = results[2]
+
+  sessionStorage.setItem('koin_session_data',      JSON.stringify(deviceData || {}))
+  sessionStorage.setItem('koin_intelligence_data', JSON.stringify(intelligenceData))
+  sessionStorage.setItem('koin_insights_data',     JSON.stringify(insightsData))
+
+  window.KOIN_ANALYSIS_READY = true
+
+  btn.disabled = false
+  btn.textContent = 'Ver mi sesión analizada →'
+  btn.style.background = 'var(--brand)'
+
+  if (window.KOIN_USER_CLICKED) {
+    window.location.href = '/dashboard.html'
+  }
+})
+</script>
+</body>
+</html>
