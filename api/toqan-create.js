@@ -1,0 +1,23 @@
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
+  const { apiKey, user_message } = req.body
+
+  const response = await fetch('https://api.toqan.ai/api/create_conversation', {
+    method: 'POST',
+    headers: {
+      'X-Api-Key': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ user_message })
+  })
+
+  const data = await response.json()
+  res.status(response.status).json(data)
+}

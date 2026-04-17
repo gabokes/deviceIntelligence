@@ -5,11 +5,11 @@ async function analyzeWithToqan(deviceData) {
     // 1. Crear conversación
     const createRes = await fetch(cfg.createUrl, {
       method: 'POST',
-      headers: {
-        'X-Api-Key': cfg.apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ user_message: JSON.stringify(deviceData) })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: cfg.apiKey,
+        user_message: JSON.stringify(deviceData)
+      })
     })
 
     if (!createRes.ok) {
@@ -30,13 +30,14 @@ async function analyzeWithToqan(deviceData) {
     const pollUrl = cfg.getAnswerUrl
       + '?conversation_id=' + encodeURIComponent(conversation_id)
       + '&request_id='      + encodeURIComponent(request_id)
+      + '&apiKey='          + encodeURIComponent(cfg.apiKey)
 
     const deadline = Date.now() + cfg.pollTimeoutMs
 
     while (Date.now() < deadline) {
       await new Promise(r => setTimeout(r, cfg.pollIntervalMs))
 
-      const pollRes = await fetch(pollUrl, { headers: { 'X-Api-Key': cfg.apiKey } })
+      const pollRes = await fetch(pollUrl)
 
       if (!pollRes.ok) {
         console.error('[Toqan] get_answer error:', pollRes.status)
@@ -47,7 +48,6 @@ async function analyzeWithToqan(deviceData) {
       console.log('[Toqan] poll status:', pollData.status)
 
       if (pollData.status === 'finished') {
-        // 3. Parsear respuesta — stripear <think> y markdown code blocks
         const raw = typeof pollData.answer === 'string' ? pollData.answer : ''
         const clean = raw
           .replace(/<think>[\s\S]*?<\/think>/g, '')
