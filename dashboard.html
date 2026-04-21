@@ -312,9 +312,9 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
   </div>
 
   <!-- HERO DECISION -->
-  <div style="background:var(--r50);border:1px solid var(--r100);border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
+  <div id="hero-card" style="background:var(--r50);border:1px solid var(--r100);border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
     <div style="flex:1;min-width:240px">
-      <div style="font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--r600);margin-bottom:4px">Decisión recomendada · Modelo</div>
+      <div id="hero-eyebrow" style="font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--r600);margin-bottom:4px">Decisión recomendada · Modelo</div>
       <div style="font-size:1.05rem;font-weight:600;color:var(--r600);letter-spacing:-.02em;margin-bottom:8px" id="hero-verdict-label">Revisar antes de aprobar</div>
       <div id="hero-desc" style="font-size:.78rem;color:var(--t2);line-height:1.65;margin-bottom:12px">Este device opera desde un entorno virtualizado detrás de una VPN. Tres agentes coinciden en señales críticas. El patrón es parte de una campaña activa en el ecosistema.</div>
       <div id="hero-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
@@ -593,6 +593,12 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
         <button class="if-btn" onclick="filterIntel('emulator',this)">Emulator/VM</button>
         <button class="if-btn" onclick="filterIntel('proxy',this)">Proxy/VPN</button>
         <button class="if-btn" onclick="filterIntel('spoof',this)">Spoofing</button>
+        <button class="if-btn" onclick="filterIntel('antifp',this)">Anti-FP</button>
+        <button class="if-btn" onclick="filterIntel('incognito',this)">Incognito</button>
+        <button class="if-btn" onclick="filterIntel('ai',this)">AI Automation</button>
+        <button class="if-btn" onclick="filterIntel('mobile',this)">Mobile Emulation</button>
+        <button class="if-btn" onclick="filterIntel('behavioral',this)">Behavioral</button>
+        <button class="if-btn" onclick="filterIntel('tor',this)">Tor</button>
         <span class="if-count" id="if-count"></span>
       </div>
       <div id="intel-dynamic" style="margin-top:12px"></div>
@@ -758,7 +764,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
     <div class="sig-sec-hd">
       <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><rect x="1" y="4" width="14" height="8" rx="1.5"/><path d="M4 8h8M4 8v2M8 8v2M12 8v2"/></svg></div>
       <span class="ssh-title">GPU & WebGL</span>
-      <span class="ssh-count">3 activas · 7 new</span>
+      <span class="ssh-count">3 activas · 9 new</span>
     </div>
     <div class="sig-grid">
       <div class="sc risk">
@@ -822,6 +828,18 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
         <div class="sc-desc">WebGPU API · vendor · architecture · features · limits</div>
         <div class="sc-div"></div>
         <div class="sc-row"><span class="sc-rk">vendor</span><span class="sc-rv" id="raw-webgpu-vendor">—</span></div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">hardware.mathFingerprint</div>
+        <div class="sc-val sm" id="raw-math-fp">—</div>
+        <div class="sc-desc">Hash de resultados Math.acos/sin/tan/exp/log · único por JS engine + arquitectura</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">hardware.architecture</div>
+        <div class="sc-val sm" id="raw-arch">—</div>
+        <div class="sc-desc">x86 / arm / simd_capable · via WASM SIMD + platform hints</div>
       </div>
     </div>
   </div>
@@ -1173,7 +1191,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
     <div class="sig-sec-hd">
       <div class="ssh-icon" style="background:var(--r50)"><svg viewBox="0 0 16 16" style="color:var(--r600)"><path d="M8 2L3 5v4c0 3 2.3 5.3 5 6 2.7-.7 5-3 5-6V5L8 2z"/></svg></div>
       <span class="ssh-title">Anti-Evasión</span>
-      <span class="ssh-count">0 activas · 5 new</span>
+      <span class="ssh-count">0 activas · 6 new</span>
     </div>
     <div class="sig-grid">
       <div class="sc">
@@ -1207,6 +1225,55 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
         <div class="sc-key">evasion.extensions (S091)</div>
         <div class="sc-val sm" id="raw-extensions">—</div>
         <div class="sc-desc">Chrome runtime · globals inyectados por extensiones</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">evasion.domBlockers</div>
+        <div class="sc-val sm" id="raw-dom-blockers">—</div>
+        <div class="sc-desc">Elementos señuelo con clases de ads · bloqueados = ad blocker activo</div>
+        <div class="sc-div"></div>
+        <div class="sc-row"><span class="sc-rk">blockedCount</span><span class="sc-rv" id="raw-dom-blocked-count">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sistema & Preferencias -->
+  <div class="sig-section">
+    <div class="sig-sec-hd">
+      <div class="ssh-icon" style="background:var(--b50)"><svg viewBox="0 0 16 16" style="color:var(--b600)"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/></svg></div>
+      <span class="ssh-title">Sistema & Preferencias</span>
+      <span class="ssh-count">0 activas · 7 new</span>
+    </div>
+    <div class="sig-grid">
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.colorGamut</div>
+        <div class="sc-val sm" id="raw-color-gamut">—</div>
+        <div class="sc-desc">rec2020 / p3 / srgb · via matchMedia color-gamut · diferencia pantallas HDR</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.contrastPreference</div>
+        <div class="sc-val sm" id="raw-contrast">—</div>
+        <div class="sc-desc">more / less / forced / no-preference · preferencia de contraste del OS</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.reducedMotion</div>
+        <div class="sc-val sm" id="raw-reduced-motion">—</div>
+        <div class="sc-desc">prefers-reduced-motion: reduce · accesibilidad del OS</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.invertedColors · forcedColors · hdr</div>
+        <div class="sc-val sm" id="raw-media-flags">—</div>
+        <div class="sc-desc">Preferencias de display: colores invertidos · forced colors · HDR</div>
+      </div>
+      <div class="sc">
+        <div class="sc-status new">NEW</div>
+        <div class="sc-key">system.intlLocale</div>
+        <div class="sc-val sm" id="raw-intl-locale">—</div>
+        <div class="sc-desc">Locale real via Intl.DateTimeFormat · puede diferir de navigator.language</div>
       </div>
     </div>
   </div>
@@ -1341,7 +1408,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
 </div>
 </div>
 
-<script src="src/data/dummy_session.js"></script>
+<script src="../data/dummy_session.js"></script>
 <script>
 // ── Leer sesión ──────────────────────────────────────────────────────────────
 const raw = sessionStorage.getItem('koin_session_data')
@@ -1687,6 +1754,32 @@ function applySession(S) {
   set('raw-decision-tree', dt.insufficient ? 'insuficiente (< 10 puntos)' : dt.straightnessRatio != null ? 'ratio ' + dt.straightnessRatio : '—')
   set('raw-dt-straight', dt.suspiciouslyStraight != null ? String(dt.suspiciouslyStraight) : '—')
 
+  // ── FingerprintJS signals ────────────────────────────────────────────────
+
+  // hardware.mathFingerprint + architecture
+  set('raw-math-fp', hw.mathFingerprint ? abbrev(hw.mathFingerprint) : '—')
+  set('raw-arch', hw.architecture || '—')
+
+  // evasion.domBlockers
+  const db = ev.domBlockers || {}
+  set('raw-dom-blockers', db.detected != null ? (db.detected ? 'DETECTADO' : 'no detectado') : '—')
+  set('raw-dom-blocked-count', db.blockedCount != null ? db.blockedCount + ' / ' + (db.total || 0) + ' elementos bloqueados' : '—')
+
+  // system.mediaFeatures
+  const mf = sys.mediaFeatures || {}
+  set('raw-color-gamut', mf.colorGamut || '—')
+  set('raw-contrast', mf.contrastPreference || '—')
+  set('raw-reduced-motion', mf.reducedMotion != null ? String(mf.reducedMotion) : '—')
+  const mFlags = [
+    mf.invertedColors ? 'inverted' : null,
+    mf.forcedColors ? 'forced-colors' : null,
+    mf.hdr ? 'HDR' : null,
+  ].filter(Boolean)
+  set('raw-media-flags', mFlags.length ? mFlags.join(' · ') : 'ninguna activa')
+
+  // system.intlLocale
+  set('raw-intl-locale', sys.intlLocale || '—')
+
   // JSON export
   document.getElementById('json-export').textContent = JSON.stringify(SESSION, null, 2)
 
@@ -1885,15 +1978,32 @@ function applyInsights(data) {
   var vcLabel = document.getElementById('vc-label')
   if (vcLabel) vcLabel.textContent = meta.verdictLabel || ''
 
-  // Hero decision
-  var heroScore = document.getElementById('hero-score')
-  if (heroScore) heroScore.textContent = meta.overallScore
+  // Hero decision — colores semánticos según score
+  var score = meta.overallScore
+  var semColor  = score >= 75 ? 'var(--r600)' : score >= 40 ? '#EAB308' : 'var(--g600)'
+  var semBg     = score >= 75 ? 'var(--r50)'  : score >= 40 ? '#FEFCE8' : 'var(--g50)'
+  var semBorder = score >= 75 ? 'var(--r100)' : score >= 40 ? '#FEF08A' : 'var(--g100)'
+
+  var heroCard = document.getElementById('hero-card')
+  if (heroCard) { heroCard.style.background = semBg; heroCard.style.borderColor = semBorder }
+  var heroEyebrow = document.getElementById('hero-eyebrow')
+  if (heroEyebrow) heroEyebrow.style.color = semColor
+  var heroScoreEl = document.getElementById('hero-score')
+  if (heroScoreEl) { heroScoreEl.textContent = score; heroScoreEl.style.color = semColor }
   var heroVerdict = document.getElementById('hero-verdict-label')
-  if (heroVerdict) heroVerdict.textContent = meta.verdictLabel || ''
+  if (heroVerdict) { heroVerdict.textContent = meta.verdictLabel || ''; heroVerdict.style.color = semColor }
   var heroDesc = document.getElementById('hero-desc')
   if (heroDesc) heroDesc.textContent = orc.insight || ''
   var heroPills = document.getElementById('hero-pills')
   if (heroPills) heroPills.innerHTML = _pillsHtml(meta)
+
+  // Verdict chip (session strip)
+  var vcChip = document.querySelector('.verdict-chip')
+  if (vcChip) { vcChip.style.background = semBg; vcChip.style.borderColor = semBorder }
+  var vcScoreEl = document.getElementById('vc-score')
+  if (vcScoreEl) { vcScoreEl.textContent = score; vcScoreEl.style.color = semColor }
+  var vcLabelEl = document.getElementById('vc-label')
+  if (vcLabelEl) { vcLabelEl.style.color = semColor }
 
   // Topbar risk badge
   var tbRiskLabel = document.getElementById('tb-risk-label')
@@ -1944,7 +2054,7 @@ function applyInsights(data) {
 
   // Vectors — ring
   var score      = meta.overallScore
-  var ringColor  = score >= 75 ? 'var(--r600)' : score >= 50 ? 'var(--a600)' : score >= 25 ? 'var(--a600)' : 'var(--g600)'
+  var ringColor  = score >= 75 ? 'var(--r600)' : score >= 40 ? '#EAB308' : 'var(--g600)'
   var ringOffset = (289 - (289 * score / 100)).toFixed(1)
   var ringArc = document.getElementById('ring-arc')
   if (ringArc) { ringArc.setAttribute('stroke', ringColor); ringArc.setAttribute('stroke-dashoffset', ringOffset) }
@@ -2002,33 +2112,88 @@ function buildFindingCard(f) {
   </div>`
 }
 
+const VECTOR_ORDER = [
+  'Bot Detection',
+  'Emulator / VM',
+  'Proxy / VPN',
+  'Browser Spoofing',
+  'Anti-Fingerprinting',
+  'Incognito',
+  'AI Automation',
+  'Mobile Emulation',
+  'Behavioral Anomaly',
+  'Tor',
+  'Browser Features'
+]
+
+const FILTER_KEYWORDS = {
+  bot:        'bot',
+  emulator:   'emulator',
+  proxy:      'proxy',
+  spoof:      'spoofing',
+  antifp:     'anti-finger',
+  incognito:  'incognito',
+  ai:         'ai automation',
+  mobile:     'mobile emulation',
+  behavioral: 'behavioral',
+  tor:        'tor'
+}
+
+const VECTOR_ALIASES = {
+  'emulator_vm':          'Emulator / VM',
+  'emulator/vm':          'Emulator / VM',
+  'bot_automation':       'Bot Detection',
+  'bot detection':        'Bot Detection',
+  'proxy_vpn':            'Proxy / VPN',
+  'proxy/vpn':            'Proxy / VPN',
+  'browser_spoofing':     'Browser Spoofing',
+  'spoofing':             'Browser Spoofing',
+  'anti_fingerprinting':  'Anti-Fingerprinting',
+  'anti-fp':              'Anti-Fingerprinting',
+  'ai_automation':        'AI Automation',
+  'mobile_emulation':     'Mobile Emulation',
+  'behavioral_anomaly':   'Behavioral Anomaly',
+  'browser_features':     'Browser Features'
+}
+
+function normalizeVector(raw) {
+  const v = (raw || '').toLowerCase().trim()
+  if (!v) return 'Browser Features'
+  if (VECTOR_ALIASES[v]) return VECTOR_ALIASES[v]
+  for (const name of VECTOR_ORDER.slice(0, -1)) {
+    if (v.includes(name.toLowerCase())) return name
+  }
+  return 'Browser Features'
+}
+
+function getVectorForFinding(f) {
+  return normalizeVector(f.vector)
+}
+
+function sortFindings(arr) {
+  const order = { anomaly: 0, warn: 1, ok: 2 }
+  return [...arr].sort((a, b) => (order[a.status] ?? 1) - (order[b.status] ?? 1))
+}
+
+function buildSectionHeader(vectorName, findings) {
+  const anomalyCount = findings.filter(f => f.status === 'anomaly').length
+  const warnCount    = findings.filter(f => f.status === 'warn').length
+  const okCount      = findings.filter(f => f.status === 'ok').length
+  const parts = [vectorName]
+  if (anomalyCount > 0) parts.push(`<span style="color:#e04040;font-weight:700">${anomalyCount} anomalía${anomalyCount !== 1 ? 's' : ''}</span>`)
+  if (warnCount > 0)    parts.push(`<span style="color:#d97706;font-weight:700">${warnCount} aviso${warnCount !== 1 ? 's' : ''}</span>`)
+  if (okCount > 0)      parts.push(`<span style="color:#16a34a;font-weight:700">${okCount} ok</span>`)
+  return `<div class="sec">${parts.join(' · ')}</div>`
+}
+
 function renderIntelligence(allFindings, filter) {
   filter = filter || _activeFilter
   const container = document.getElementById('intel-dynamic')
   const counter   = document.getElementById('if-count')
   const secSoon   = document.getElementById('sec-soon')
 
-  // Aplicar filtro
-  let visible = allFindings
-  if (filter === 'anomaly') {
-    visible = allFindings.filter(f => f.status === 'anomaly' || f.status === 'warn')
-  } else if (filter === 'ok') {
-    visible = allFindings.filter(f => f.status === 'ok')
-  } else if (filter !== 'all') {
-    // filtro por vector (bot, emulator, proxy, spoof)
-    const keywords = {
-      bot: 'bot',
-      emulator: 'emulator',
-      proxy: 'proxy',
-      spoof: 'spoof'
-    }
-    const kw = keywords[filter] || filter
-    visible = allFindings.filter(f => (f.vector || '').toLowerCase().includes(kw))
-  }
-
-  counter.textContent = visible.length + ' hallazgo' + (visible.length !== 1 ? 's' : '')
-
   if (allFindings.length === 0) {
+    counter.textContent = '0 hallazgos'
     container.innerHTML = `<div class="intel-card" style="margin-bottom:20px">
       <div class="ic-body" style="padding:20px;text-align:center;color:var(--t3);font-size:.78rem">
         Analizando este device por primera vez — sin historial previo
@@ -2038,27 +2203,43 @@ function renderIntelligence(allFindings, filter) {
     return
   }
 
-  const bad  = visible.filter(f => f.status !== 'ok')
-  const good = visible.filter(f => f.status === 'ok')
-
-  let html = ''
-
-  if (bad.length > 0) {
-    html += `<div class="sec">Qué está mal</div>
-    <div class="intel-grid" style="margin-bottom:20px">${bad.map(buildFindingCard).join('')}</div>`
+  // Determinar qué findings son visibles según filtro
+  let baseFindings = allFindings
+  if (filter === 'anomaly') {
+    baseFindings = allFindings.filter(f => f.status === 'anomaly' || f.status === 'warn')
+  } else if (filter === 'ok') {
+    baseFindings = allFindings.filter(f => f.status === 'ok')
+  } else if (filter !== 'all') {
+    const kw = FILTER_KEYWORDS[filter] || filter
+    baseFindings = allFindings.filter(f => (f.vector || '').toLowerCase().includes(kw))
   }
 
-  if (good.length > 0) {
-    html += `<div class="sec">Confirmado limpio</div>
-    <div class="intel-grid" style="margin-bottom:20px">${good.map(buildFindingCard).join('')}</div>`
-  }
+  counter.textContent = baseFindings.length + ' hallazgo' + (baseFindings.length !== 1 ? 's' : '')
 
-  if (visible.length === 0) {
-    html = `<div class="intel-card" style="margin-bottom:20px">
+  if (baseFindings.length === 0) {
+    container.innerHTML = `<div class="intel-card" style="margin-bottom:20px">
       <div class="ic-body" style="padding:20px;text-align:center;color:var(--t3);font-size:.78rem">
         Sin hallazgos para este filtro
       </div>
     </div>`
+    return
+  }
+
+  // Agrupar por vector
+  const groups = {}
+  for (const f of baseFindings) {
+    const v = getVectorForFinding(f)
+    if (!groups[v]) groups[v] = []
+    groups[v].push(f)
+  }
+
+  let html = ''
+  for (const vectorName of VECTOR_ORDER) {
+    const items = groups[vectorName]
+    if (!items || items.length === 0) continue
+    const sorted = sortFindings(items)
+    html += buildSectionHeader(vectorName, sorted)
+    html += `<div class="intel-grid" style="margin-bottom:20px">${sorted.map(buildFindingCard).join('')}</div>`
   }
 
   container.innerHTML = html
