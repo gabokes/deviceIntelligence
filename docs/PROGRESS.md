@@ -155,6 +155,12 @@ Formato: `- [x]` completado · `- [ ]` pendiente · `- [~]` en progreso
 - [x] Si algún agente falla → continúa con null, no bloquea el flujo
 - [x] Tab Insights completamente dinámico (agent cards, vote strip, orchestrator)
 - [x] Tab Vectores completamente dinámico (ring, barras, tabla)
+- [x] Agente insights actualizado con 12 vectores
+- [x] mobileEmulation integrado en Insights y Vectores
+- [x] Normalización de vector strings implementada
+- [x] Device Intelligence agrupado por vector
+- [x] Filtros completos en Device Intelligence
+- [x] Tab Vectores columna derecha con Device Intelligence
 
 ---
 

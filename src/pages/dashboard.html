@@ -574,7 +574,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-l
           <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Vectores activos</span><span style="font-weight:600;color:var(--r600)">3 críticos · 1 aviso</span></div>
           <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Limpios</span><span style="font-weight:600;color:var(--g700)">3</span></div>
           <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Sin datos</span><span style="font-weight:600;color:var(--t3)">3</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Señales analizadas</span><span style="font-weight:600">47</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem"><span style="color:var(--t2)">Señales analizadas</span><span style="font-weight:600">122</span></div>
         </div>
       </div>
     </div>
@@ -1816,10 +1816,11 @@ const _AGENT_NAMES = {
   deviceSharing:      'Device Sharing',
   behavioral:         'Behavioral Anomaly',
   ato:                'Account Takeover',
-  aiAutomation:       'AI Automation'
+  aiAutomation:       'AI Automation',
+  mobileEmulation:    'Mobile Emulation'
 }
 
-const _AGENT_ORDER = ['emulatorVm','proxyVpn','browserSpoofing','incognito','bot','antiFingerprinting','tor','aiAutomation','deviceSharing','behavioral','ato']
+const _AGENT_ORDER = ['emulatorVm','proxyVpn','browserSpoofing','incognito','bot','antiFingerprinting','tor','aiAutomation','mobileEmulation','deviceSharing','behavioral','ato']
 
 const _VECTOR_META = {
   emulatorVm:         { name: 'Emulator / VM',      cat: 'hardware · gpu · cpu'       },
@@ -1830,6 +1831,7 @@ const _VECTOR_META = {
   antiFingerprinting: { name: 'Anti-Fingerprinting', cat: 'canvas · evasión'           },
   tor:                { name: 'Tor',                  cat: 'exit nodes · RTT'           },
   aiAutomation:       { name: 'AI Automation',        cat: 'patrones · timing · ml'     },
+  mobileEmulation:    { name: 'Mobile Emulation',     cat: 'emulación · touch · ua'     },
   deviceSharing:      { name: 'Device Sharing',       cat: 'historial · sesiones'       },
   behavioral:         { name: 'Behavioral Anomaly',   cat: 'mouse · teclado · touch'    },
   ato:                { name: 'Account Takeover',     cat: 'velocity · cuenta'          }
@@ -2211,7 +2213,7 @@ function renderIntelligence(allFindings, filter) {
     baseFindings = allFindings.filter(f => f.status === 'ok')
   } else if (filter !== 'all') {
     const kw = FILTER_KEYWORDS[filter] || filter
-    baseFindings = allFindings.filter(f => (f.vector || '').toLowerCase().includes(kw))
+    baseFindings = allFindings.filter(f => normalizeVector(f.vector).toLowerCase().includes(kw))
   }
 
   counter.textContent = baseFindings.length + ' hallazgo' + (baseFindings.length !== 1 ? 's' : '')
