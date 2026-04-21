@@ -1,3 +1,28 @@
+const _INSIGHTS_KEY_MAP = {
+  emulator_vm:         'emulatorVm',
+  'emulator/vm':       'emulatorVm',
+  proxy_vpn:           'proxyVpn',
+  'proxy/vpn':         'proxyVpn',
+  browser_spoofing:    'browserSpoofing',
+  anti_fingerprinting: 'antiFingerprinting',
+  'anti-fingerprinting': 'antiFingerprinting',
+  device_sharing:      'deviceSharing',
+  ai_automation:       'aiAutomation',
+  mobile_emulation:    'mobileEmulation',
+  behavioral_anomaly:  'behavioral',
+  account_takeover:    'ato'
+}
+
+function _normalizeInsightsObj(obj) {
+  if (!obj || typeof obj !== 'object') return {}
+  const out = {}
+  for (const k of Object.keys(obj)) {
+    const norm = _INSIGHTS_KEY_MAP[k] || _INSIGHTS_KEY_MAP[k.toLowerCase()] || k
+    out[norm] = obj[k]
+  }
+  return out
+}
+
 async function analyzeInsightsWithToqan(deviceData, intelligenceData) {
   try {
     const cfg = KOIN_CONFIG.toqanInsights
@@ -62,10 +87,10 @@ async function analyzeInsightsWithToqan(deviceData, intelligenceData) {
           const answer = JSON.parse(clean)
           console.log('[ToqanInsights] overallScore:', answer?.meta?.overallScore)
           return {
-            meta:         answer?.meta         || {},
-            agents:       answer?.agents       || {},
-            vectors:      answer?.vectors      || {},
-            orchestrator: answer?.orchestrator || {}
+            meta:         answer?.meta                          || {},
+            agents:       _normalizeInsightsObj(answer?.agents  || {}),
+            vectors:      _normalizeInsightsObj(answer?.vectors || {}),
+            orchestrator: answer?.orchestrator                 || {}
           }
         } catch (e) {
           console.error('[ToqanInsights] parse error:', e.message)

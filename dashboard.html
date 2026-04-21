@@ -1437,6 +1437,23 @@ const findings = intelligenceData?.findings?.length
 const rawInsights = sessionStorage.getItem('koin_insights_data')
 const insightsData = rawInsights ? JSON.parse(rawInsights) : null
 
+const _dummyInsights = {
+  meta: {
+    overallScore:  DUMMY_SESSION.meta.overallScore,
+    verdict:       DUMMY_SESSION.meta.verdict,
+    verdictLabel:  DUMMY_SESSION.meta.verdictLabel,
+    alertCount:    3,
+    warnCount:     1,
+    cleanCount:    3,
+    nodataCount:   5,
+    analysisTimeMs: DUMMY_SESSION.meta.analysisTimeMs
+  },
+  agents:       DUMMY_SESSION.agents,
+  vectors:      DUMMY_SESSION.vectors,
+  orchestrator: { insight: 'Análisis de referencia — corriendo el pipeline real desde landing.html para datos en vivo.' }
+}
+const _insightsToRender = insightsData || _dummyInsights
+
 // ── DIAGNÓSTICO ──────────────────────────────────────────────────────────────
 console.log('[DASH] intelligenceData:', intelligenceData ? ('findings=' + (intelligenceData.findings?.length ?? '?')) : 'NULL')
 console.log('[DASH] insightsData:', insightsData ? ('score=' + insightsData.meta?.overallScore + ' agents=' + Object.keys(insightsData.agents || {}).join(',')) : 'NULL')
@@ -2065,9 +2082,12 @@ function applyInsights(data) {
   var ringLbl = document.getElementById('ring-lbl')
   if (ringLbl) ringLbl.textContent = meta.verdictLabel || ''
 
-  // Vectors — composition bars
+  // Vectors — composition bars (solo reemplazar si hay datos válidos)
   var vComp = document.getElementById('vectors-comp')
-  if (vComp) vComp.innerHTML = _compBarsHtml(vectors)
+  if (vComp) {
+    var barsHtml = _compBarsHtml(vectors)
+    if (barsHtml.trim()) vComp.innerHTML = barsHtml
+  }
 
   // Vectors — summary
   var vSummary = document.getElementById('vectors-summary')
@@ -2083,7 +2103,7 @@ function applyInsights(data) {
   }
 }
 
-if (insightsData) applyInsights(insightsData)
+applyInsights(_insightsToRender)
 
 // ── Intelligence tab — rendering dinámico ────────────────────────────────────
 let _activeFilter = 'all'
