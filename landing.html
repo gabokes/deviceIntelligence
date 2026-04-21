@@ -721,6 +721,14 @@ var _deviceDataPromise = KoinCollector.collect().catch(function(e) {
   return null
 })
 
+// Guardar device data ni bien el collector termina — no esperar agentes
+_deviceDataPromise.then(function(data) {
+  if (data) {
+    sessionStorage.setItem('koin_session_data', JSON.stringify(data))
+    console.log('[Koin] device data guardado en sessionStorage')
+  }
+})
+
 // Fases 2 y 3 — ambos agentes en PARALELO después de collector
 var _intelligencePromise = _deviceDataPromise.then(function(data) {
   if (data) btn.textContent = 'Analizando sesión con IA...'
@@ -745,7 +753,7 @@ Promise.all([_deviceDataPromise, _intelligencePromise, _insightsPromise]).then(f
   var intelligenceData = results[1]
   var insightsData    = results[2]
 
-  sessionStorage.setItem('koin_session_data',      JSON.stringify(deviceData || {}))
+  if (deviceData) sessionStorage.setItem('koin_session_data', JSON.stringify(deviceData))
   sessionStorage.setItem('koin_intelligence_data', JSON.stringify(intelligenceData))
   sessionStorage.setItem('koin_insights_data',     JSON.stringify(insightsData))
 

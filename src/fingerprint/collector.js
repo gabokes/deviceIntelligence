@@ -860,6 +860,103 @@ async function collectDeviceData(organizationId = 'de4330cc45') {
     return { indicators, detected: indicators.length > 0 };
   }
 
+  // ─── Helpers FingerprintJS signals ───────────────────────────────────────────
+
+  /**
+   * hardware.mathFingerprint — Hash de resultados de operaciones Math
+   * Mide: diferencias de precisión float por arquitectura, JS engine y compilador JIT
+   * Vector(es): Browser Spoofing, Device Integrity
+   * Permiso: none | Compatibilidad: Chrome ✓ | Firefox ✓ | Safari ✓
+   */
+  function getMathFingerprint() {
+    try {
+      const ops = [
+        Math.acos(0.5),    Math.acosh(1.5),   Math.asin(0.5),    Math.asinh(0.5),
+        Math.atan(0.5),    Math.atanh(0.5),    Math.atan2(1, 2),  Math.cbrt(2),
+        Math.cos(0.1),     Math.cosh(0.1),     Math.exp(1),       Math.expm1(0.1),
+        Math.hypot(2, 3),  Math.log(2),        Math.log10(2),     Math.log1p(1),
+        Math.log2(2),      Math.pow(2, 0.1),   Math.sin(0.5),     Math.sinh(0.5),
+        Math.sqrt(2),      Math.tan(1),        Math.tanh(0.5),
+      ]
+      return simpleHash(ops.map(v => v.toFixed(15)).join(','))
+    } catch (e) { return null }
+  }
+
+  /**
+   * hardware.architecture — Arquitectura de CPU via WASM SIMD y platform hints
+   * Mide: x86 / arm / unknown — diferenciador de hardware real vs emulación
+   * Vector(es): Device Integrity, Emulator/VM
+   * Permiso: none | Compatibilidad: Chrome ✓ | Firefox ✓ | Safari ✓
+   */
+  function detectArchitecture() {
+    try {
+      const p = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase()
+      if (/arm|aarch64/.test(p)) return 'arm'
+      if (/win32|win64|x86|linux x86/.test(p)) return 'x86'
+      // WASM SIMD: compiled module with i32x4.splat — soportado en x86 + arm64
+      if (typeof WebAssembly !== 'undefined' && WebAssembly.validate) {
+        const simd = WebAssembly.validate(new Uint8Array([
+          0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11
+        ]))
+        return simd ? 'simd_capable' : 'unknown'
+      }
+      return 'unknown'
+    } catch (e) { return 'unknown' }
+  }
+
+  /**
+   * evasion.domBlockers — Detección de ad blockers via elementos señuelo
+   * Mide: si extensiones de ad blocking ocultan elementos con IDs/clases conocidas
+   * Vector(es): Anti-Fingerprinting
+   * Permiso: none | Compatibilidad: Chrome ✓ | Firefox ✓ | Safari ✓
+   */
+  function detectDOMBlockers() {
+    try {
+      const decoys = ['ad', 'ads', 'banner_ad', 'adsbox', 'doubleclick', 'textads']
+      const container = document.createElement('div')
+      container.style.cssText = 'position:fixed;top:-9999px;width:1px;height:1px'
+      document.body.appendChild(container)
+      let blocked = 0
+      for (const cls of decoys) {
+        const el = document.createElement('div')
+        el.className = cls
+        el.style.cssText = 'width:1px;height:1px'
+        container.appendChild(el)
+        if (el.offsetParent === null || getComputedStyle(el).display === 'none') blocked++
+      }
+      document.body.removeChild(container)
+      return { detected: blocked > 0, blockedCount: blocked, total: decoys.length }
+    } catch (e) { return { detected: false, blockedCount: 0, total: 0 } }
+  }
+
+  /**
+   * system.mediaFeatures — Preferencias del sistema via matchMedia
+   * Mide: colorGamut, contrastPreference, invertedColors, forcedColors, reducedMotion, hdr
+   * Vector(es): Device Integrity, Browser Spoofing
+   * Permiso: none | Compatibilidad: Chrome ✓ | Firefox ✓ | Safari ✓
+   */
+  function getMediaFeatures() {
+    const mq = q => { try { return window.matchMedia(q).matches } catch (e) { return null } }
+    return {
+      colorGamut:         mq('(color-gamut: rec2020)') ? 'rec2020' : (mq('(color-gamut: p3)') ? 'p3' : (mq('(color-gamut: srgb)') ? 'srgb' : 'unknown')),
+      contrastPreference: mq('(prefers-contrast: more)') ? 'more' : (mq('(prefers-contrast: less)') ? 'less' : (mq('(prefers-contrast: forced)') ? 'forced' : 'no-preference')),
+      invertedColors:     mq('(inverted-colors: inverted)'),
+      forcedColors:       mq('(forced-colors: active)'),
+      reducedMotion:      mq('(prefers-reduced-motion: reduce)'),
+      hdr:                mq('(dynamic-range: high)'),
+    }
+  }
+
+  /**
+   * system.intlLocale — Locale real del sistema via Intl API
+   * Mide: locale resuelto (ej: "es-AR") — diferente del navigator.language
+   * Vector(es): Proxy/VPN, Browser Spoofing
+   * Permiso: none | Compatibilidad: Chrome ✓ | Firefox ✓ | Safari ✓
+   */
+  function getIntlLocale() {
+    try { return Intl.DateTimeFormat().resolvedOptions().locale } catch (e) { return null }
+  }
+
   // ─── Helpers iteración 6 — AI Automation ────────────────────────────────────
 
   /**
@@ -1656,6 +1753,13 @@ async function collectDeviceData(organizationId = 'de4330cc45') {
   // ─── Señales iteración 4 ──────────────────────────────────────────────────
   const modernAPIs = checkModernAPIs();
 
+  // ─── Señales FingerprintJS ────────────────────────────────────────────────
+  const mathFingerprint = getMathFingerprint()
+  const architecture    = detectArchitecture()
+  const domBlockers     = detectDOMBlockers()
+  const mediaFeatures   = getMediaFeatures()
+  const intlLocale      = getIntlLocale()
+
   // ─── Señales iteración 5 (sync) ───────────────────────────────────────────
   const touchConsistency = checkTouchConsistency();
   const screenOrientData = getScreenOrientationDetails();
@@ -1743,10 +1847,12 @@ async function collectDeviceData(organizationId = 'de4330cc45') {
       },
       speech: speechData,
       media:  mediaData,
-      wasm:   wasmData,       // S050
-      gpu:    gpuPerf,        // S053
-      webgpu: webGPU,         // S153-S156
-      audioContextState,      // S061
+      wasm:             wasmData,          // S050
+      gpu:              gpuPerf,           // S053
+      webgpu:           webGPU,            // S153-S156
+      audioContextState,                   // S061
+      mathFingerprint,                     // FingerprintJS
+      architecture,                        // FingerprintJS
     },
     system: {
       languages,
@@ -1760,6 +1866,8 @@ async function collectDeviceData(organizationId = 'de4330cc45') {
       memory:      memoryInfo,                  // S052/S068
       modernAPIs,                               // S072-S085b (iter 4)
       webAuthn,                                 // S139
+      mediaFeatures,                            // FingerprintJS
+      intlLocale,                               // FingerprintJS
     },
     automation: {
       webdriver:           webdriver,
@@ -1790,6 +1898,7 @@ async function collectDeviceData(organizationId = 'de4330cc45') {
       antiFingerprinting: antiFPData,           // S049
       privacyTools:       privacyToolsAdv,      // S090 (iter 5)
       extensions:         extensionData,        // S091 (iter 5)
+      domBlockers,                              // FingerprintJS
     },
     mobile: {                                   // iter 5
       touchConsistency,                         // S088

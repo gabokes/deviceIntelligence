@@ -1462,12 +1462,12 @@ console.log('[DASH] findings array length:', findings.length)
 
 // ── Aplicar valores dinámicos ────────────────────────────────────────────────
 function applySession(S) {
-  const s = S.signals
-  const m = S.meta
+  const s = S.signals || {}
+  const m = S.meta    || {}
 
   // Topbar
   const crumb = document.getElementById('tb-crumb')
-  if (crumb) crumb.textContent = 'Browser Intelligence · session ' + m.sessionId.slice(0, 10)
+  if (crumb) crumb.textContent = 'Browser Intelligence · session ' + (m.sessionId || '—').slice(0, 10)
 
   const tbTime = document.getElementById('tb-time')
   if (tbTime) {

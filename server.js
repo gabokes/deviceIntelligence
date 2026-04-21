@@ -4,7 +4,7 @@ const fs    = require('fs')
 const path  = require('path')
 
 const PORT = 3003
-const ROOT = __dirname  // HTMLs están en la raíz ahora
+const ROOT = __dirname  // sirve raíz — los HTMLs están copiados aquí desde src/pages/
 
 const MIME = {
   '.html': 'text/html',
